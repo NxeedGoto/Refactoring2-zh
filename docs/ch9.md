@@ -1,16 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-  
-
-  
-
-  第9章　重新组织数据
+# 第9章 重新组织数据
 
   数据结构在程序中扮演着重要的角色，所以毫不意外，我有一组重构手法专门用于数据结构的组织。将一个值用于多个不同的用途，这就是催生混乱和bug的温床。所以，一旦看见这样的情况，我就会用拆分变量（240）将不同的用途分开。和其他任何程序元素一样，给变量起个好名字不容易但又非常重要，所以我常会用到变量改名（137）。但有些多余的变量最好是彻底消除掉，比如通过以查询取代派生变量（248）。
 
   引用和值的混淆经常会造成问题，所以我会用将引用对象改为值对象（252）和将值对象改为引用对象（256）在两者之间切换。
 
-  9.1　拆分变量（Split Variable）
+##  9.1 拆分变量（Split Variable）
 
   曾用名：移除对参数的赋值（Remove Assignments to Parameters）
 
@@ -58,17 +52,17 @@ console.log(area);
 
   下面范例中我要计算一个苏格兰布丁运动的距离。在起点处，静止的苏格兰布丁会受到一个初始力的作用而开始运动。一段时间后，第二个力作用于布丁，让它再次加速。根据牛顿第二定律，我可以这样计算布丁运动的距离：
   function distanceTravelled (scenario, time) { 
-　let result;
-　let acc = scenario.primaryForce / scenario.mass; 
-　let primaryTime = Math.min(time, scenario.delay); 
-　result = 0.5 * acc * primaryTime * primaryTime; 
-　let secondaryTime = time - scenario.delay;
-　if (secondaryTime &gt; 0) {
-　　let primaryVelocity = acc * scenario.delay;
-　　acc = (scenario.primaryForce + scenario.secondaryForce) / scenario.mass;
-　　result += primaryVelocity * secondaryTime + 0.5 * acc * secondaryTime * secondaryTime;
-　}
-　return result;
+ let result;
+ let acc = scenario.primaryForce / scenario.mass; 
+ let primaryTime = Math.min(time, scenario.delay); 
+ result = 0.5 * acc * primaryTime * primaryTime; 
+ let secondaryTime = time - scenario.delay;
+ if (secondaryTime &gt; 0) {
+  let primaryVelocity = acc * scenario.delay;
+  acc = (scenario.primaryForce + scenario.secondaryForce) / scenario.mass;
+  result += primaryVelocity * secondaryTime + 0.5 * acc * secondaryTime * secondaryTime;
+ }
+ return result;
 }
 
   真是个丑陋的小东西。注意观察此例中的acc变量是如何被赋值两次的。acc变量有两个责任：第一是保存第一个力造成的初始加速度；第二是保存两个力共同造成的加速度。这就是我想要分解的东西。
@@ -79,35 +73,35 @@ console.log(area);
 
   首先，我在函数开始处修改这个变量的名称，并将新变量声明为const。接着，我把新变量声明之后、第二次赋值之前对acc变量的所有引用，全部改用新变量。最后，我在第二次赋值处重新声明acc变量：
   function distanceTravelled (scenario, time) { 
-　let result;
-　const primaryAcceleration = scenario.primaryForce / scenario.mass; 
-　let primaryTime = Math.min(time, scenario.delay);
-　result = 0.5 * primaryAcceleration * primaryTime * primaryTime; 
-　let secondaryTime = time - scenario.delay;
-　if (secondaryTime &gt; 0) {
-　　let primaryVelocity = primaryAcceleration * scenario.delay;
-　　let acc = (scenario.primaryForce + scenario.secondaryForce) / scenario.mass;
-　　result += primaryVelocity * secondaryTime + 0.5 * acc * secondaryTime * secondaryTime;
-　}
-　return result;
+ let result;
+ const primaryAcceleration = scenario.primaryForce / scenario.mass; 
+ let primaryTime = Math.min(time, scenario.delay);
+ result = 0.5 * primaryAcceleration * primaryTime * primaryTime; 
+ let secondaryTime = time - scenario.delay;
+ if (secondaryTime &gt; 0) {
+  let primaryVelocity = primaryAcceleration * scenario.delay;
+  let acc = (scenario.primaryForce + scenario.secondaryForce) / scenario.mass;
+  result += primaryVelocity * secondaryTime + 0.5 * acc * secondaryTime * secondaryTime;
+ }
+ return result;
 }
 
   新变量的名称指出，它只承担原先acc变量的第一个责任。我将它声明为const，确保它只被赋值一次。然后，我在原先acc变量第二次被赋值处重新声明acc。现在，重新编译并测试，一切都应该没有问题。
 
   然后，我继续处理acc变量的第二次赋值。这次我把原先的变量完全删掉，代之以一个新变量。新变量的名称指出，它只承担原先acc变量的第二个责任：
   function distanceTravelled (scenario, time) { 
-　let result;
-　const primaryAcceleration = scenario.primaryForce / scenario.mass;
-　let primaryTime = Math.min(time, scenario.delay);
-　result = 0.5 * primaryAcceleration * primaryTime * primaryTime; 
-　let secondaryTime = time - scenario.delay;
-　if (secondaryTime &gt; 0) {
-　　let primaryVelocity = primaryAcceleration * scenario.delay;
-　　const secondaryAcceleration = (scenario.primaryForce + scenario.secondaryForce) / scenario.mass; 
-　　result += primaryVelocity * secondaryTime +
-　　　0.5 * secondaryAcceleration * secondaryTime * secondaryTime;
-　}
-　return result;
+ let result;
+ const primaryAcceleration = scenario.primaryForce / scenario.mass;
+ let primaryTime = Math.min(time, scenario.delay);
+ result = 0.5 * primaryAcceleration * primaryTime * primaryTime; 
+ let secondaryTime = time - scenario.delay;
+ if (secondaryTime &gt; 0) {
+  let primaryVelocity = primaryAcceleration * scenario.delay;
+  const secondaryAcceleration = (scenario.primaryForce + scenario.secondaryForce) / scenario.mass; 
+  result += primaryVelocity * secondaryTime +
+   0.5 * secondaryAcceleration * secondaryTime * secondaryTime;
+ }
+ return result;
 }
 
   现在，这段代码肯定可以让你想起更多其他重构手法。尽情享受吧。（我敢保证，这比吃苏格兰布丁强多了——你知道他们都在里面放了些什么东西吗？1 ）
@@ -116,34 +110,34 @@ console.log(area);
 
   另一种情况是，变量是以输入参数的形式声明又在函数内部被再次赋值，此时也可以考虑拆分变量。例如，下列代码：
   function discount (inputValue, quantity) {
-　if (inputValue &gt; 50) inputValue = inputValue - 2; 
-　if (quantity &gt; 100) inputValue = inputValue - 1; 
-　return inputValue;
+ if (inputValue &gt; 50) inputValue = inputValue - 2; 
+ if (quantity &gt; 100) inputValue = inputValue - 1; 
+ return inputValue;
 }
 
   这里的inputValue有两个用途：它既是函数的输入，也负责把结果带回给调用方。（由于JavaScript的参数是按值传递的，所以函数内部对inputValue的修改不会影响调用方。）
 
   在这种情况下，我就会对inputValue变量做拆分。
   function discount (originalInputValue, quantity) { 
-　let inputValue = originalInputValue;
-　if (inputValue &gt; 50) inputValue = inputValue - 2;
-　if (quantity &gt; 100) inputValue = inputValue - 1; 
-　return inputValue;
+ let inputValue = originalInputValue;
+ if (inputValue &gt; 50) inputValue = inputValue - 2;
+ if (quantity &gt; 100) inputValue = inputValue - 1; 
+ return inputValue;
 }
 
   然后用变量改名（137）给两个变量换上更好的名字。
   function discount (inputValue, quantity) { 
-　let result = inputValue;
-　if (inputValue &gt; 50) result = result - 2;
-　if (quantity &gt; 100) result = result - 1; 
-　return result;
+ let result = inputValue;
+ if (inputValue &gt; 50) result = result - 2;
+ if (quantity &gt; 100) result = result - 1; 
+ return result;
 }
 
   我修改了第二行代码，把inputValue作为判断条件的基准数据。虽说这里用inputValue还是result效果都一样，但在我看来，这行代码的含义是“根据原始输入值做判断，然后修改结果值”，而不是“根据当前结果值做判断”——尽管两者的效果恰好一样。
 
   1苏格兰布丁（haggis）是一种苏格兰菜，把羊心等内脏装在羊胃里煮成。由于它被羊胃包成一个球体，因此可以像球一样踢来踢去，这就是本例的由来。“把羊心装在羊胃里煮成……”，呃，有些人难免对这道菜恶心，Martin Fowler想必是其中之一。——译者注
 
-  9.2　字段改名（Rename Field）
+##  9.2 字段改名（Rename Field）
 
   
   class Organization { 
@@ -186,14 +180,14 @@ console.log(area);
 
   我想把name改名为title。这个对象被很多地方使用，有些代码会更新name字段。所以我首先要用封装记录（162）把这个记录封装起来。
   class Organization { 
-　constructor(data) {
-　　this._name = data.name; 
-　　this._country = data.country;
-　}
-　get name()　{return this._name;}
-　set name(aString) {this._name = aString;} 
-　get country()　{return this._country;}
-　set country(aCountryCode) {this._country = aCountryCode;}
+ constructor(data) {
+  this._name = data.name; 
+  this._country = data.country;
+ }
+ get name() {return this._name;}
+ set name(aString) {this._name = aString;} 
+ get country() {return this._country;}
+ set country(aCountryCode) {this._country = aCountryCode;}
 }
 
 const organization = new Organization({name: "Acme Gooseberries", country: "GB"});
@@ -204,28 +198,28 @@ const organization = new Organization({name: "Acme Gooseberries", country: "GB"}
 
   class Organization...
   class Organization { 
-　constructor(data) {
-　　this._title = data.name; 
-　　this._country = data.country;
-　}
-　get name()　{return this._title;}
-　set name(aString) {this._title = aString;} 
-　get country()　{return this._country;}
-　set country(aCountryCode) {this._country = aCountryCode;}
+ constructor(data) {
+  this._title = data.name; 
+  this._country = data.country;
+ }
+ get name() {return this._title;}
+ set name(aString) {this._title = aString;} 
+ get country() {return this._country;}
+ set country(aCountryCode) {this._country = aCountryCode;}
 }
 
   接下来我就可以在构造函数中使用title字段。
 
   class Organization...
   class Organization { 
-　constructor(data) {
-　　this._title = (data.title !== undefined) ? data.title : data.name;
-　　this._country = data.country;
-　}
-　get name()　　　　{return this._title;}
-　set name(aString) {this._title = aString;} 
-　get country()　　 {return this._country;}
-　set country(aCountryCode) {this._country = aCountryCode;}
+ constructor(data) {
+  this._title = (data.title !== undefined) ? data.title : data.name;
+  this._country = data.country;
+ }
+ get name()    {return this._title;}
+ set name(aString) {this._title = aString;} 
+ get country()   {return this._country;}
+ set country(aCountryCode) {this._country = aCountryCode;}
 }
 
   现在，构造函数的调用者既可以使用name也可以使用title（后者的优先级更高）。我会逐一查看所有调用构造函数的地方，将它们改为使用新名字。
@@ -235,42 +229,42 @@ const organization = new Organization({name: "Acme Gooseberries", country: "GB"}
 
   class Organization...
   class Organization { 
-　constructor(data) {
-　　this._title = data.title; 
-　　this._country = data.country;
-　}
-　get name()　　　　{return this._title;}
-　set name(aString) {this._title = aString;} 
-　get country()　　 {return this._country;}
-　set country(aCountryCode) {this._country = aCountryCode;}
+ constructor(data) {
+  this._title = data.title; 
+  this._country = data.country;
+ }
+ get name()    {return this._title;}
+ set name(aString) {this._title = aString;} 
+ get country()   {return this._country;}
+ set country(aCountryCode) {this._country = aCountryCode;}
 }
 
   现在构造函数和内部数据结构都已经在使用新名字了，接下来我就可以给访问函数改名。这一步很简单，只要对每个访问函数运用函数改名（124）就行了。
 
   class Organization...
   class Organization { 
-　constructor(data) {
-　　this._title = data.title; 
-　　this._country = data.country;
-　}
-　get title()  {return this._title;}
-　set title(aString) {this._title = aString;} 
-　get country()  　{return this._country;}
-　set country(aCountryCode) {this._country = aCountryCode;}
+ constructor(data) {
+  this._title = data.title; 
+  this._country = data.country;
+ }
+ get title()  {return this._title;}
+ set title(aString) {this._title = aString;} 
+ get country()   {return this._country;}
+ set country(aCountryCode) {this._country = aCountryCode;}
 }
 
   上面展示的重构过程，是本重构手法最重量级的做法，只有对广泛使用的数据结构才用得上。如果该数据结构只在较小的范围（例如单个函数）中用到，我可能可以一步到位地完成所有改名动作，不需要提前做封装。何时需要用上全套重量级做法，这由你自己判断——如果在重构过程中破坏了测试，我通常会视之为一个信号，说明我需要改用更渐进的方式来重构。
 
   有些编程语言允许将数据结构声明为不可变。在这种情况下，我可以把旧字段的值复制到新名字下，逐一修改使用方代码，然后删除旧字段。对于可变的数据结构，重复数据会招致灾难；而不可变的数据结构则没有这些麻烦。这也是大家愿意使用不可变数据的原因。
 
-  9.3　以查询取代派生变量（Replace Derived Variable with Query）
+##  9.3 以查询取代派生变量（Replace Derived Variable with Query）
 
   
   get discountedTotal() {return this._discountedTotal;} 
 set discount(aNumber) {
-　const old = this._discount; 
-　this._discount = aNumber; 
-　this._discountedTotal += old - aNumber;
+ const old = this._discount; 
+ this._discount = aNumber; 
+ this._discountedTotal += old - aNumber;
 }
 
   
@@ -316,8 +310,8 @@ set discount(aNumber) {this._discount = aNumber;}
   class ProductionPlan...
   get production() {return this._production;} 
 applyAdjustment(anAdjustment) {
-　this._adjustments.push(anAdjustment); 
-　this._production += anAdjustment.amount;
+ this._adjustments.push(anAdjustment); 
+ this._production += anAdjustment.amount;
 }
 
   丑与不丑，全在观者。我看到的丑陋之处是重复——不是常见的代码重复，而是数据的重复。如果我要对生产计划（production plan）做调整（adjustment），不光要把调整的信息保存下来，还要根据调整信息修改一个累计值——后者完全可以即时计算，而不必每次更新。
@@ -326,13 +320,13 @@ applyAdjustment(anAdjustment) {
 
   class ProductionPlan...
   get production() {
-　assert(this._production === this.calculatedProduction);
-　return this._production;
+ assert(this._production === this.calculatedProduction);
+ return this._production;
 }
 
 get calculatedProduction() { 
-　return this._adjustments
-　　.reduce((sum, a) =&gt; sum + a.amount, 0);
+ return this._adjustments
+  .reduce((sum, a) =&gt; sum + a.amount, 0);
 }
 
   放上这个断言之后，我会运行测试。如果断言没有失败，我就可以不再返回该字段，改为返回即时计算的结果。
@@ -365,43 +359,43 @@ get calculatedProduction() {
 
   class ProductionPlan...
   constructor (production) { 
-　this._production = production; 
-　this._adjustments = [];
+ this._production = production; 
+ this._adjustments = [];
 }
 get production() {return this._production;} 
 applyAdjustment(anAdjustment) {
-　this._adjustments.push(anAdjustment);
-　this._production += anAdjustment.amount;
+ this._adjustments.push(anAdjustment);
+ this._production += anAdjustment.amount;
 }
 
   如果照上面的方式运用引入断言（302），只要production的初始值不为0，断言就会失败。
 
   不过我还是可以替换派生数据，只不过必须先运用拆分变量（240）。
   constructor (production) { 
-　this._initialProduction = production; 
-　this._productionAccumulator = 0; 
-　this._adjustments = [];
+ this._initialProduction = production; 
+ this._productionAccumulator = 0; 
+ this._adjustments = [];
 }
 get production() {
-　return this._initialProduction + this._productionAccumulator;
+ return this._initialProduction + this._productionAccumulator;
 }
 
   现在我就可以使用引入断言（302）。
 
   class ProductionPlan...
   get production() {
-　assert(this._productionAccumulator === this.calculatedProductionAccumulator);
-　return this._initialProduction + this._productionAccumulator;
+ assert(this._productionAccumulator === this.calculatedProductionAccumulator);
+ return this._initialProduction + this._productionAccumulator;
 }
 
 get calculatedProductionAccumulator() { 
-　return this._adjustments
-　　.reduce((sum, a) =&gt; sum + a.amount, 0);
+ return this._adjustments
+  .reduce((sum, a) =&gt; sum + a.amount, 0);
 }
 
   接下来的步骤就跟前一个范例一样了。不过我会更愿意保留calculatedProduction Accumulator这个属性，而不把它内联消去。
 
-  9.4　将引用对象改为值对象（Change Reference to Value）
+ ## 9.4 将引用对象改为值对象（Change Reference to Value）
 
   反向重构：将值对象改为引用对象（256）
 
@@ -445,12 +439,12 @@ get calculatedProductionAccumulator() {
 
   constructor() {
   constructor() {
-　this._telephoneNumber = new TelephoneNumber();
+ this._telephoneNumber = new TelephoneNumber();
 }
 
-get officeAreaCode()　　{return this._telephoneNumber.areaCode;} 
+get officeAreaCode()  {return this._telephoneNumber.areaCode;} 
 set officeAreaCode(arg) {this._telephoneNumber.areaCode = arg;} 
-get officeNumber()　　{return this._telephoneNumber.number;}
+get officeNumber()  {return this._telephoneNumber.number;}
 set officeNumber(arg) {this._telephoneNumber.number = arg;}
 
   class TelephoneNumber...
@@ -475,9 +469,9 @@ set number(arg) {this._number = arg;}
   class Person...
   get officeAreaCode()    {return this._telephoneNumber.areaCode;} 
 set officeAreaCode(arg) {
-　this._telephoneNumber = new TelephoneNumber(arg, this.officeNumber);
+ this._telephoneNumber = new TelephoneNumber(arg, this.officeNumber);
 }
-get officeNumber()　  {return this._telephoneNumber.number;} 
+get officeNumber()   {return this._telephoneNumber.number;} 
 set officeNumber(arg) {this._telephoneNumber.number = arg;}
 
   对于其他字段，重复上述步骤。
@@ -489,22 +483,22 @@ set officeAreaCode(arg) {
 }
 get officeNumber()    {return this._telephoneNumber.number;} 
 set officeNumber(arg) {
-　this._telephoneNumber = new TelephoneNumber(this.officeAreaCode, arg);
+ this._telephoneNumber = new TelephoneNumber(this.officeAreaCode, arg);
 }
 
   现在，TelephoneNumber已经是不可变的类，可以将其变成真正的值对象了。是不是真正的值对象，要看是否基于值判断相等性。在这个领域中，JavaScript做得不好：语言和核心库都不支持将“基于引用的相等性判断”换成“基于值的相等性判断”。我唯一能做的就是创建自己的equals函数。
 
   class TelephoneNumber...
   equals(other) {
-　if (!(other instanceof TelephoneNumber)) return false; 
-　return this.areaCode === other.areaCode &amp;&amp;
-　　this.number === other.number;
+ if (!(other instanceof TelephoneNumber)) return false; 
+ return this.areaCode === other.areaCode &amp;&amp;
+  this.number === other.number;
 }
 
   对其进行测试很重要：
   it('telephone equals', function() {
-　assert(　　　　new TelephoneNumber("312", "555-0142")
-　　　　 .equals(new TelephoneNumber("312", "555-0142")));
+ assert(    new TelephoneNumber("312", "555-0142")
+     .equals(new TelephoneNumber("312", "555-0142")));
 });
 
   这段测试代码用了不寻常的格式，是为了帮助读者一眼看出上下两次构造函数调用完全一样。
@@ -517,7 +511,7 @@ set officeNumber(arg) {
 
   如果有多个客户端使用了TelephoneNumber对象，重构的过程还是一样，只是在运用移除设值函数（331）时要修改多处客户端代码。另外，有必要添加几个测试，检查电话号码不相等以及与非电话号码和null值比较相等性等情况。
 
-  9.5　将值对象改为引用对象（Change Value to Reference）
+ ## 9.5 将值对象改为引用对象（Change Value to Reference）
 
   反向重构：将引用对象改为值对象（252）
 
@@ -571,18 +565,18 @@ get id() {return this._id;}
   let _repositoryData;
 
 export function initialize() {
-　_repositoryData = {};
-　_repositoryData.customers = new Map();
+ _repositoryData = {};
+ _repositoryData.customers = new Map();
 }
 
 export function registerCustomer(id) {
-　if (! _repositoryData.customers.has(id))
-　　_repositoryData.customers.set(id, new Customer(id)); 
-　return findCustomer(id);
+ if (! _repositoryData.customers.has(id))
+  _repositoryData.customers.set(id, new Customer(id)); 
+ return findCustomer(id);
 }
 
 export function findCustomer(id) {
-　return _repositoryData.customers.get(id);
+ return _repositoryData.customers.get(id);
 }
 
   仓库对象允许根据ID注册顾客，并且对于一个ID只会创建一个Customer对象。有了仓库对象，我就可以修改Order对象的构造函数来使用它。
@@ -593,9 +587,9 @@ export function findCustomer(id) {
 
   class Order...
   constructor(data) { 
-　this._number = data.number;
-　this._customer = registerCustomer(data.customer);
-　// load other data
+ this._number = data.number;
+ this._customer = registerCustomer(data.customer);
+ // load other data
 }
 get customer() {return this._customer;}
 

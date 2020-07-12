@@ -1,10 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-  
-
-  
-
-  第8章　搬移特性
+# 第8章 搬移特性
 
   到目前为止，我介绍的重构手法都是关于如何新建、移除或重命名程序的元素。此外，还有另一种类型的重构也很重要，那就是在不同的上下文之间搬移元素。我会通过搬移函数（198）手法在类与其他模块之间搬移函数，对于字段可用搬移字段（207）手法做类似的搬移。
 
@@ -14,13 +8,13 @@
 
   最后这项手法，我相信一定会是任何一个合格程序员的至爱，那就是移除死代码（237）。没什么能比手刃一段长长的无用代码更令一个程序员感到满足的了。
 
-  8.1　搬移函数（Move Function）
+##  8.1 搬移函数（Move Function）
 
   曾用名：搬移函数（Move Method）
 
   
   class Account {
-　get overdraftCharge() {...}
+ get overdraftCharge() {...}
 
   
   class AccountType {
@@ -88,26 +82,26 @@
 
   让我用一个函数来举例。这个函数会计算一条GPS轨迹记录（track record）的总距离（total distance）。
   function trackSummary(points) { 
-　const totalTime = calculateTime();
-　const totalDistance = calculateDistance(); 
-　const pace = totalTime / 60 / totalDistance ; 
-　return {
-　　time: totalTime, 
-　　distance: totalDistance, 
-　　pace: pace
-　};
+ const totalTime = calculateTime();
+ const totalDistance = calculateDistance(); 
+ const pace = totalTime / 60 / totalDistance ; 
+ return {
+  time: totalTime, 
+  distance: totalDistance, 
+  pace: pace
+ };
 
-　function calculateDistance() { 
-　　let result = 0;
-　　for (let i = 1; i &lt; points.length; i++) { 
-　　　result += distance(points[i-1],  points[i]);
-　　}
-　　return result;
-　}
+ function calculateDistance() { 
+  let result = 0;
+  for (let i = 1; i &lt; points.length; i++) { 
+   result += distance(points[i-1],  points[i]);
+  }
+  return result;
+ }
 
-　function distance(p1,p2) { ... } 
-　function radians(degrees) { ... } 
-　function calculateTime() { ... }
+ function distance(p1,p2) { ... } 
+ function radians(degrees) { ... } 
+ function calculateTime() { ... }
 
 }
 
@@ -115,96 +109,96 @@
 
   我先将函数复制一份到顶层作用域中：
   function trackSummary(points) { 
-　const totalTime = calculateTime();
-　const totalDistance = calculateDistance(); 
-　const pace = totalTime / 60 / totalDistance ;
-　return {
-　　time: totalTime, 
-　　distance: totalDistance,
-　　pace: pace
-　};
+ const totalTime = calculateTime();
+ const totalDistance = calculateDistance(); 
+ const pace = totalTime / 60 / totalDistance ;
+ return {
+  time: totalTime, 
+  distance: totalDistance,
+  pace: pace
+ };
 
-　function calculateDistance() { 
-　　let result  =  0;
-　　for (let i = 1; i &lt; points.length; i++) { 
-　　　result += distance(points[i-1], points[i]);
-　　}
-　　return result;
-　}
-　...
-　function distance(p1,p2) { ... } 
-　function radians(degrees) { ... } 
-　function calculateTime() { ... }
+ function calculateDistance() { 
+  let result  =  0;
+  for (let i = 1; i &lt; points.length; i++) { 
+   result += distance(points[i-1], points[i]);
+  }
+  return result;
+ }
+ ...
+ function distance(p1,p2) { ... } 
+ function radians(degrees) { ... } 
+ function calculateTime() { ... }
 
 }
 
-　function top_calculateDistance() { 
-　　let result  =  0;
-　　for (let i = 1; i &lt; points.length; i++) { 
-　　　result += distance(points[i-1],  points[i]);
-　　}
-　　return result;
-　}
+ function top_calculateDistance() { 
+  let result  =  0;
+  for (let i = 1; i &lt; points.length; i++) { 
+   result += distance(points[i-1],  points[i]);
+  }
+  return result;
+ }
 
   复制函数时，我习惯为函数一并改个名，这样可让“它们有不同的作用域”这个信息显得一目了然。现在我还不想花费心思考虑它正确的名字该是什么，因此我暂且先用一个临时的名字。
 
   此时代码依然能正常工作，但我的静态分析器要开始抱怨了，它说新函数里多了两个未定义的符号，分别是distance和points。对于points，自然是将其作为函数参数传进来。
   function top_calculateDistance(points) {
-　let result =0;
-　for (let i = 1; i &lt; points.length; i++) { 
-　　result += distance(points[i-1],  points[i]);
-　}
-　return result;
+ let result =0;
+ for (let i = 1; i &lt; points.length; i++) { 
+  result += distance(points[i-1],  points[i]);
+ }
+ return result;
 }
 
   至于distance，虽然我也可以将它作为参数传进来，但也许将其计算函数calculate Distance一并搬移过来会更合适。该函数的代码如下。
 
   function trackSummary...
   function distance(p1,p2) {
-　const EARTH_RADIUS = 3959; // in miles
-　const dLat = radians(p2.lat) - radians(p1.lat); 
-　const dLon = radians(p2.lon) - radians(p1.lon); 
-　const a = Math.pow(Math.sin(dLat / 2),2)
-　　　　　+ Math.cos(radians(p2.lat))
-　　　　　* Math.cos(radians(p1.lat))
-　　　　　* Math.pow(Math.sin(dLon / 2), 2);
-　const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-　return EARTH_RADIUS * c;
+ const EARTH_RADIUS = 3959; // in miles
+ const dLat = radians(p2.lat) - radians(p1.lat); 
+ const dLon = radians(p2.lon) - radians(p1.lon); 
+ const a = Math.pow(Math.sin(dLat / 2),2)
+     + Math.cos(radians(p2.lat))
+     * Math.cos(radians(p1.lat))
+     * Math.pow(Math.sin(dLon / 2), 2);
+ const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+ return EARTH_RADIUS * c;
 }
 function radians(degrees) { 
-　return degrees * Math.PI / 180;
+ return degrees * Math.PI / 180;
 }
 
   我留意到distance函数中只调用了radians函数，后者已经没有再引用当前上下文里的任何元素。因此与其将radians作为参数，我更倾向于将它也一并搬移。不过我不需要一步到位，我们可以先将这两个函数从当前上下文中搬移进calculateDistance函数里：
   function trackSummary(points) {
-　const totalTime = calculateTime();
-　const totalDistance = calculateDistance(); 
-　const pace = totalTime / 60 / totalDistance ; 
-　return {
-　　time: totalTime, 
-　　distance: totalDistance, 
-　　pace: pace
-　};
+ const totalTime = calculateTime();
+ const totalDistance = calculateDistance(); 
+ const pace = totalTime / 60 / totalDistance ; 
+ return {
+  time: totalTime, 
+  distance: totalDistance, 
+  pace: pace
+ };
 
-　function calculateDistance() {
-　　let result = 0;
-　　for (let i = 1; i &lt; points.length; i++) { 
-　　　result += distance(points[i-1], points[i]);
-　　}
-　　return result;
+ function calculateDistance() {
+  let result = 0;
+  for (let i = 1; i &lt; points.length; i++) { 
+   result += distance(points[i-1], points[i]);
+  }
+  return result;
 
-　 function distance(p1,p2) { ... } 
-　 function radians(degrees) { ... }
+  function distance(p1,p2) { ... } 
+  function radians(degrees) { ... }
 
 }
 
   这样做的好处是，我可以充分发挥静态检查和测试的作用，让它们帮我检查有无遗漏的东西。在这个实例中一切顺利，因此，我可以放心地将这两个函数直接复制到top_calculateDistance中：
   function top_calculateDistance(points) {
-　let result = 0;
-　for (let i = 1; i &lt; points.length; i++) { 
-　　result += distance(points[i-1],  points[i]);
-　}
-　return result;
+ let result = 0;
+ for (let i = 1; i &lt; points.length; i++) { 
+  result += distance(points[i-1],  points[i]);
+ }
+ return result;
 
  function distance(p1,p2) { ... } 
  function radians(degrees) { ... }
@@ -215,49 +209,49 @@ function radians(degrees) {
 
   现在万事俱备，是时候端出主菜了——我要在原calculateDistance函数体内调用top_calculateDistance函数：
   function trackSummary(points) {
-　const totalTime = calculateTime();
-　const totalDistance = calculateDistance(); 
-　const pace = totalTime / 60 / totalDistance ; 
-　return {
-　　time: totalTime, 
-　　distance: totalDistance, 
-　　pace: pace
-　};
+ const totalTime = calculateTime();
+ const totalDistance = calculateDistance(); 
+ const pace = totalTime / 60 / totalDistance ; 
+ return {
+  time: totalTime, 
+  distance: totalDistance, 
+  pace: pace
+ };
 
-　function calculateDistance() {
-　　return top_calculateDistance(points);
-　}
+ function calculateDistance() {
+  return top_calculateDistance(points);
+ }
 
   接下来最重要的事是要运行一遍测试，看看功能是否仍然完整，函数在其新家待得是否舒适。
 
   测试通过后，便算完成了主要任务，就好比搬家，现在大箱小箱已经全搬到新家，接下来就是将它们拆箱复位了。第一件事是决定还要不要保留原来那个只起委托作用的函数。在这个例子中，原函数的调用点不多，作为嵌套函数它们的作用范围通常也很小，因此我觉得这里大可直接移除原函数。
   function trackSummary(points) { 
-　const totalTime = calculateTime();
-　const totalDistance = top_calculateDistance(points); 
-　const pace = totalTime / 60 / totalDistance ; 
-　return {
-　　time: totalTime, 
-　　distance: totalDistance, 
-　　pace: pace
-　};
+ const totalTime = calculateTime();
+ const totalDistance = top_calculateDistance(points); 
+ const pace = totalTime / 60 / totalDistance ; 
+ return {
+  time: totalTime, 
+  distance: totalDistance, 
+  pace: pace
+ };
 }
 
   同时，也该是时候为这个函数认真想个名字了。因为顶层函数拥有最高的可见性，因此取个好名非常重要。totalDistance听起来不错，但还不能马上用这个名字，因为trackSummary函数中有一个同名的变量——我不觉得这个变量有保留的价值，因此我们先用内联变量（123）处理它，之后再使用改变函数声明（124）：
   function trackSummary(points) { 
-　const totalTime = calculateTime();
-　const pace = totalTime / 60 / totalDistance(points) ;
-　return {
-　　time: totalTime,
-　　distance: totalDistance(points), 
-　　pace: pace
-　};
+ const totalTime = calculateTime();
+ const pace = totalTime / 60 / totalDistance(points) ;
+ return {
+  time: totalTime,
+  distance: totalDistance(points), 
+  pace: pace
+ };
 }
 function totalDistance(points) {
-　let result = 0;
-　for (let i = 1; i &lt; points.length; i++) {
-　　result += distance(points[i-1], points[i]);
-　}
-　return result;
+ let result = 0;
+ for (let i = 1; i &lt; points.length; i++) {
+  result += distance(points[i-1], points[i]);
+ }
+ return result;
 }
 
   如果出于某些原因，实在需要保留该变量，那么我建议将该变量改个其他的名字，比如totalDistanceCache或distance等。
@@ -276,21 +270,21 @@ function radians(degrees) { ... }
 
   class Account...
   get bankCharge() { 
-　let result = 4.5;
-　if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge;
-　return result;
+ let result = 4.5;
+ if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge;
+ return result;
 }
 
 get overdraftCharge() {
-　if (this.type.isPremium) { 
-　　const baseCharge = 10;
-　　if (this.daysOverdrawn &lt;= 7) 
-　　　return baseCharge;
-　　else
-　　　return baseCharge + (this.daysOverdrawn - 7) * 0.85;
-　}
-　else
-　　return this.daysOverdrawn * 1.75;
+ if (this.type.isPremium) { 
+  const baseCharge = 10;
+  if (this.daysOverdrawn &lt;= 7) 
+   return baseCharge;
+  else
+   return baseCharge + (this.daysOverdrawn - 7) * 0.85;
+ }
+ else
+  return this.daysOverdrawn * 1.75;
 }
 
   上面的代码会根据账户类型（account type）的不同，决定不同的“透支金额计费”算法。因此，很自然会想到将overdraftCharge函数搬移到AccountType类去。
@@ -301,15 +295,15 @@ get overdraftCharge() {
 
   class AccountType...
   overdraftCharge(daysOverdrawn) {
-　if (this.isPremium) {
-　　const baseCharge  =  10; 
-　　if (daysOverdrawn &lt;= 7)
-　　　return baseCharge;
-　　else
-　　　return baseCharge + (daysOverdrawn - 7) * 0.85;
-　}
-　else
-　　return daysOverdrawn * 1.75;
+ if (this.isPremium) {
+  const baseCharge  =  10; 
+  if (daysOverdrawn &lt;= 7)
+   return baseCharge;
+  else
+   return baseCharge + (daysOverdrawn - 7) * 0.85;
+ }
+ else
+  return daysOverdrawn * 1.75;
 }
 
   为了使函数适应这个新家，我必须决定如何处理两个作用范围发生改变的变量。isPremium如今只需要简单地从this上获取，但daysOverdrawn怎么办呢？我是直接传值，还是把整个account对象传过来？为了方便，我选择先简单传一个值，不过如果后续还需要账户（account）对象上除了daysOverdrawn以外的更多数据，例如需要根据账户类型（account type）来决定如何从账户（account）对象上取用数据时，那么我很可能会改变主意，转而选择传入整个account对象。
@@ -318,52 +312,52 @@ get overdraftCharge() {
 
   class Account...
   get bankCharge() { 
-　let result = 4.5;
-　if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge; 
-　return result;
+ let result = 4.5;
+ if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge; 
+ return result;
 }
 
 get overdraftCharge() {
-　return this.type.overdraftCharge(this.daysOverdrawn);
+ return this.type.overdraftCharge(this.daysOverdrawn);
 }
 
   然后下一件需要决定的事情是，是保留overdraftCharge这个委托函数，还是直接内联它？内联的话，代码会变成下面这样。
 
   class Account...
   get bankCharge() {
-　let result = 4.5;
-　if (this._daysOverdrawn &gt; 0)
-　　result += this.type.overdraftCharge(this.daysOverdrawn);
-　return result;
+ let result = 4.5;
+ if (this._daysOverdrawn &gt; 0)
+  result += this.type.overdraftCharge(this.daysOverdrawn);
+ return result;
 }
 
   在早先的步骤中，我将daysOverdrawn作为参数直接传递给overdraftCharge函数，但如若账户（account）对象上有很多数据需要传递，那我就比较倾向于直接将整个对象作为参数传递过去：
 
   class Account...
   get bankCharge() {
-　let result = 4.5;
-　if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge; 
-　return result;
+ let result = 4.5;
+ if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge; 
+ return result;
 }
 
 get overdraftCharge() {
-　return this.type.overdraftCharge(this);
+ return this.type.overdraftCharge(this);
 }
 
   class AccountType…
   overdraftCharge(account) {
-　if (this.isPremium) {
-　　const baseCharge = 10;
-　　if (account.daysOverdrawn &lt;= 7) 
-　　　return baseCharge;
-　　else
-　　　return baseCharge + (account.daysOverdrawn - 7) * 0.85;
-　}
-　else
-　　return account.daysOverdrawn * 1.75;
+ if (this.isPremium) {
+  const baseCharge = 10;
+  if (account.daysOverdrawn &lt;= 7) 
+   return baseCharge;
+  else
+   return baseCharge + (account.daysOverdrawn - 7) * 0.85;
+ }
+ else
+  return account.daysOverdrawn * 1.75;
 }
 
-  8.2　搬移字段（Move Field）
+##  8.2 搬移字段（Move Field）
 
   
   class Customer {
@@ -429,17 +423,17 @@ get overdraftCharge() {
 
   class Customer...
   constructor(name, discountRate) {
-　this._name = name; 
-　this._discountRate = discountRate;
-　this._contract = new CustomerContract(dateToday());
+ this._name = name; 
+ this._discountRate = discountRate;
+ this._contract = new CustomerContract(dateToday());
 }
 get discountRate() {return this._discountRate;} 
 becomePreferred() {
-　this._discountRate += 0.03;
-　// other nice things
+ this._discountRate += 0.03;
+ // other nice things
 }
 applyDiscount(amount) {
-　return amount.subtract(amount.multiply(this._discountRate));
+ return amount.subtract(amount.multiply(this._discountRate));
 }
 
   class CustomerContract...
@@ -453,18 +447,18 @@ applyDiscount(amount) {
 
   class Customer...
   constructor(name, discountRate) {
-　this._name = name; 
-　this._setDiscountRate(discountRate);
-　this._contract = new CustomerContract(dateToday());
+ this._name = name; 
+ this._setDiscountRate(discountRate);
+ this._contract = new CustomerContract(dateToday());
 }
 get discountRate() {return this._discountRate;}
 _setDiscountRate(aNumber) {this._discountRate = aNumber;}
 becomePreferred() {
-　this._setDiscountRate(this.discountRate + 0.03);
-　// other nice things
+ this._setDiscountRate(this.discountRate + 0.03);
+ // other nice things
 }
 applyDiscount(amount)  {
-　return amount.subtract(amount.multiply(this.discountRate));
+ return amount.subtract(amount.multiply(this.discountRate));
 }
 
   我通过定制的applyDiscount方法来更新字段，而不是使用通常的设值函数，这是因为我不想为字段暴露一个public的设值函数。
@@ -473,10 +467,10 @@ applyDiscount(amount)  {
 
   class CustomerContract...
   constructor(startDate, discountRate) {
-　this._startDate = startDate; 
-　this._discountRate = discountRate;
+ this._startDate = startDate; 
+ this._discountRate = discountRate;
 }
-get discountRate()　　{return this._discountRate;} 
+get discountRate()  {return this._discountRate;} 
 set discountRate(arg) {this._discountRate = arg;}
 
   接下来，我可以修改customer对象的访问函数，让它引用CustomerContract这个新添的字段。不过当我这么干时，我收到了一个错误：“Cannot set property 'discountRate' of undefined”。这是因为我们先调用了_setDiscountRate函数，而此时CustomerContract对象尚未创建出来。为了修复这个错误，我得先撤销刚刚的代码，回到上一个可工作的状态，然后再应用移动语句（223）手法，将_setDiscountRate函数调用语句挪动到创建对象的语句之后。
@@ -508,9 +502,9 @@ _setDiscountRate(aNumber) {this._contract.discountRate = aNumber;}
 
   class Account...
   constructor(number, type, interestRate) {
-　this._number = number;
-　this._type = type; 
-　this._interestRate = interestRate;
+ this._number = number;
+ this._type = type; 
+ this._interestRate = interestRate;
 }
 get interestRate() {return this._interestRate;}
 
@@ -550,7 +544,7 @@ get interestRate() {return this._interestRate;}
 }
 get interestRate() {return this._type.interestRate;}
 
-  8.3　搬移语句到函数（Move Statements into Function）
+##  8.3 搬移语句到函数（Move Statements into Function）
 
   反向重构：搬移语句到调用者（217）
 
@@ -559,9 +553,9 @@ get interestRate() {return this._type.interestRate;}
 result.concat(photoData(person.photo));
 
 function photoData(aPhoto) { 
-　return [
-　　`&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`,
-　　`&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
+ return [
+  `&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`,
+  `&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
  ];
 }
 
@@ -569,11 +563,11 @@ function photoData(aPhoto) {
   result.concat(photoData(person.photo));
 
 function photoData(aPhoto) { 
-　return [
-　　`&lt;p&gt;title: ${aPhoto.title}&lt;/p&gt;`,
-　　`&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`,
-　　`&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
-　];
+ return [
+  `&lt;p&gt;title: ${aPhoto.title}&lt;/p&gt;`,
+  `&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`,
+  `&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
+ ];
 }
 
   动机
@@ -606,93 +600,93 @@ function photoData(aPhoto) {
 
   我将用一个例子来讲解这项手法。以下代码会生成一些关于相片（photo）的HTML：
   function renderPerson(outStream, person) {
-　const result = [];
-　result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`);
-　result.push(renderPhoto(person.photo));
-　result.push(`&lt;p&gt;title: ${person.photo.title}&lt;/p&gt;`);
-　result.push(emitPhotoData(person.photo));
-　return result.join("\n");
+ const result = [];
+ result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`);
+ result.push(renderPhoto(person.photo));
+ result.push(`&lt;p&gt;title: ${person.photo.title}&lt;/p&gt;`);
+ result.push(emitPhotoData(person.photo));
+ return result.join("\n");
 }
 function photoDiv(p) { 
-　return [
-　　"&lt;div&gt;",
-　　`&lt;p&gt;title:  ${p.title}&lt;/p&gt;`, 
-　　emitPhotoData(p),
-　　"&lt;/div&gt;",
-　].join("\n");
+ return [
+  "&lt;div&gt;",
+  `&lt;p&gt;title:  ${p.title}&lt;/p&gt;`, 
+  emitPhotoData(p),
+  "&lt;/div&gt;",
+ ].join("\n");
 }
 
 function emitPhotoData(aPhoto) {
-　const result = [];
-　result.push(`&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`);
-　result.push(`&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`); 
-　return result.join("\n");
+ const result = [];
+ result.push(`&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`);
+ result.push(`&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`); 
+ return result.join("\n");
 }
 
   这个例子中的emitPhotoData函数有两个调用点，每个调用点的前面都有一行类似的重复代码，用于打印与标题（title）相关的信息。我希望能消除重复，把打印标题的那行代码搬移到emitPhotoData函数里去。如果emitPhotoData只有一个调用点，那我大可直接把代码复制并粘贴过去就完事，但若调用点不止一个，那我就更倾向于用更安全的手法小步前进。
 
   我先选择其中一个调用点，对其应用提炼函数（106）。除了我想搬移的语句，我还把emitPhotoData函数也一起提炼到新函数中。
   function photoDiv(p) { 
-　return [
-　　"&lt;div&gt;",
-　　zznew(p),
-　　"&lt;/div&gt;",
-　].join("\n");
+ return [
+  "&lt;div&gt;",
+  zznew(p),
+  "&lt;/div&gt;",
+ ].join("\n");
 }
 
 function zznew(p) {
-　return [
-　　`&lt;p&gt;title: ${p.title}&lt;/p&gt;`, 
-　　emitPhotoData(p),
-　].join("\n");
+ return [
+  `&lt;p&gt;title: ${p.title}&lt;/p&gt;`, 
+  emitPhotoData(p),
+ ].join("\n");
 }
 
   完成提炼后，我会逐一查看emitPhotoData的其他调用点，找到该函数与其前面的重复语句，一并换成对新函数的调用。
   function renderPerson(outStream, person) {
-　const result = []; 
-　result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`); 
-　result.push(renderPhoto(person.photo)); 
-　result.push(zznew(person.photo));
-　return  result.join("\n");
+ const result = []; 
+ result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`); 
+ result.push(renderPhoto(person.photo)); 
+ result.push(zznew(person.photo));
+ return  result.join("\n");
 }
 
   替换完emitPhotoData函数的所有调用点后，我紧接着应用内联函数（115）将emitPhotoData函数内联到新函数中。
   function zznew(p) { 
-　return [
-　　`&lt;p&gt;title: ${p.title}&lt;/p&gt;`,
-　　`&lt;p&gt;location: ${p.location}&lt;/p&gt;`,
-　　`&lt;p&gt;date: ${p.date.toDateString()}&lt;/p&gt;`,
-　].join("\n");
+ return [
+  `&lt;p&gt;title: ${p.title}&lt;/p&gt;`,
+  `&lt;p&gt;location: ${p.location}&lt;/p&gt;`,
+  `&lt;p&gt;date: ${p.date.toDateString()}&lt;/p&gt;`,
+ ].join("\n");
 }
 
   最后，再对新提炼的函数应用函数改名（124），就大功告成了。
   function renderPerson(outStream, person) {
-　const result = []; 
-　result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`); 
-　result.push(renderPhoto(person.photo)); 
-　result.push(emitPhotoData(person.photo)); 
-　return result.join("\n");
+ const result = []; 
+ result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`); 
+ result.push(renderPhoto(person.photo)); 
+ result.push(emitPhotoData(person.photo)); 
+ return result.join("\n");
 }
 
 function photoDiv(aPhoto) { 
-　return [
-　　"&lt;div&gt;", 
-　　emitPhotoData(aPhoto), 
-　　"&lt;/div&gt;",
-　].join("\n");
+ return [
+  "&lt;div&gt;", 
+  emitPhotoData(aPhoto), 
+  "&lt;/div&gt;",
+ ].join("\n");
 }
 
 function emitPhotoData(aPhoto) { 
-　return [
-　　`&lt;p&gt;title: ${aPhoto.title}&lt;/p&gt;`,
-　　`&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`,
-　　`&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
-　].join("\n");
+ return [
+  `&lt;p&gt;title: ${aPhoto.title}&lt;/p&gt;`,
+  `&lt;p&gt;location: ${aPhoto.location}&lt;/p&gt;`,
+  `&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
+ ].join("\n");
 }
 
   同时我会记得调整函数参数的命名，使之与我的编程风格保持一致。
 
-  8.4　搬移语句到调用者（Move Statements to Callers）
+ ## 8.4 搬移语句到调用者（Move Statements to Callers）
 
   反向重构：搬移语句到函数（213）
 
@@ -700,8 +694,8 @@ function emitPhotoData(aPhoto) {
   emitPhotoData(outStream, person.photo); 
 
 function  emitPhotoData(outStream, photo) {
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
-　outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
+ outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
 
   
@@ -709,7 +703,7 @@ function  emitPhotoData(outStream, photo) {
 outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
 
 function emitPhotoData(outStream, photo) {
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
 }
 
   动机
@@ -744,25 +738,25 @@ function emitPhotoData(outStream, photo) {
 
   下面这个例子比较简单：emitPhotoData是一个函数，在两处地方被调用。
   function renderPerson(outStream, person) {
-　outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
-　renderPhoto(outStream, person.photo); 
-　emitPhotoData(outStream, person.photo);
+ outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
+ renderPhoto(outStream, person.photo); 
+ emitPhotoData(outStream, person.photo);
 }
 
 function listRecentPhotos(outStream, photos) { 
-　photos
-　　.filter(p =&gt; p.date &gt; recentDateCutoff())
-　　.forEach(p =&gt; {
-　　　outStream.write("&lt;div&gt;\n");
-　　　emitPhotoData(outStream, p);
-　　　outStream.write("&lt;/div&gt;\n");
-　　});
+ photos
+  .filter(p =&gt; p.date &gt; recentDateCutoff())
+  .forEach(p =&gt; {
+   outStream.write("&lt;div&gt;\n");
+   emitPhotoData(outStream, p);
+   outStream.write("&lt;/div&gt;\n");
+  });
 }
 
 function emitPhotoData(outStream, photo) {
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
-　outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`); 
-　outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
+ outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`); 
+ outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
 
   我需要修改软件，支持listRecentPhotos函数以不同方式渲染相片的location信息，而renderPerson的行为则保持不变。为了使这次修改更容易进行，我要应用本手法，将emitPhotoData函数最后的那行代码搬移到其调用端。
@@ -771,143 +765,143 @@ function emitPhotoData(outStream, photo) {
 
   重构的第一步是先用提炼函数（106），将那些最终希望留在emitPhotoData函数里的语句先提炼出去。
   function renderPerson(outStream, person) {
-　outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`); 
-　renderPhoto(outStream, person.photo); 
-　emitPhotoData(outStream, person.photo);
+ outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`); 
+ renderPhoto(outStream, person.photo); 
+ emitPhotoData(outStream, person.photo);
 }
 
 function listRecentPhotos(outStream, photos) { 
-　photos
-　　.filter(p =&gt; p.date &gt; recentDateCutoff())
-　　.forEach(p =&gt; { 
-　　　outStream.write("&lt;div&gt;\n");
-　　　emitPhotoData(outStream, p); 
-　　　outStream.write("&lt;/div&gt;\n");
-　　});
+ photos
+  .filter(p =&gt; p.date &gt; recentDateCutoff())
+  .forEach(p =&gt; { 
+   outStream.write("&lt;div&gt;\n");
+   emitPhotoData(outStream, p); 
+   outStream.write("&lt;/div&gt;\n");
+  });
 }
 
 function  emitPhotoData(outStream, photo) {
-　zztmp(outStream,  photo);
-　outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
+ zztmp(outStream,  photo);
+ outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
 
 function zztmp(outStream, photo) { 
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
-　outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
 
   新提炼出来的函数一般只会短暂存在，因此我在命名上不需要太认真，不过，取个容易搜索的名字会很有帮助。提炼完成后运行一下测试，确保提炼出来的新函数能正常工作。
 
   接下来，我要对emitPhotoData的调用点逐一应用内联函数（115）。先从renderPerson函数开始。
   function renderPerson(outStream, person) {
-　outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
-　renderPhoto(outStream, person.photo); 
-　zztmp(outStream,  person.photo);
-　outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
+ renderPhoto(outStream, person.photo); 
+ zztmp(outStream,  person.photo);
+ outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
 }
 function listRecentPhotos(outStream, photos) { 
-　photos
-　　.filter(p =&gt; p.date &gt; recentDateCutoff())
-　　.forEach(p =&gt; { 
-　　　outStream.write("&lt;div&gt;\n");
-　　　emitPhotoData(outStream, p); 
-　　　outStream.write("&lt;/div&gt;\n");
-　　});
+ photos
+  .filter(p =&gt; p.date &gt; recentDateCutoff())
+  .forEach(p =&gt; { 
+   outStream.write("&lt;div&gt;\n");
+   emitPhotoData(outStream, p); 
+   outStream.write("&lt;/div&gt;\n");
+  });
 }
 
 function emitPhotoData(outStream, photo) {
-　zztmp(outStream, photo);
-　outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
+ zztmp(outStream, photo);
+ outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
 
 function zztmp(outStream, photo) {
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
-　outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
 
   然后再次运行测试，确保这次函数内联能正常工作。测试通过后，再前往下一个调用点。
   function renderPerson(outStream, person) {
-　outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
-　renderPhoto(outStream, person.photo); 
-　zztmp(outStream,  person.photo);
-　outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
+ renderPhoto(outStream, person.photo); 
+ zztmp(outStream,  person.photo);
+ outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
 }
 
 function listRecentPhotos(outStream, photos) { 
-　photos
-　　.filter(p =&gt; p.date &gt; recentDateCutoff())
-　　.forEach(p =&gt; { 
-　　　outStream.write("&lt;div&gt;\n"); 
-　　　zztmp(outStream, p);
-　　　outStream.write(`&lt;p&gt;location: ${p.location}&lt;/p&gt;\n`);
-　　　outStream.write("&lt;/div&gt;\n");
-　　});
+ photos
+  .filter(p =&gt; p.date &gt; recentDateCutoff())
+  .forEach(p =&gt; { 
+   outStream.write("&lt;div&gt;\n"); 
+   zztmp(outStream, p);
+   outStream.write(`&lt;p&gt;location: ${p.location}&lt;/p&gt;\n`);
+   outStream.write("&lt;/div&gt;\n");
+  });
 }
 
 function emitPhotoData(outStream, photo) {
-　zztmp(outStream, photo);
-　outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
+ zztmp(outStream, photo);
+ outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
 
 function zztmp(outStream, photo) {
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
-　outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
 
   至此，我就可以移除外面的emitPhotoData函数，完成内联函数（115）手法。
   function renderPerson(outStream, person) {
-　outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`); 
-　renderPhoto(outStream, person.photo); 
-　zztmp(outStream,  person.photo);
-　outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`); 
+ renderPhoto(outStream, person.photo); 
+ zztmp(outStream,  person.photo);
+ outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
 }
 
 function listRecentPhotos(outStream, photos) { 
-　photos
-　　.filter(p =&gt; p.date &gt; recentDateCutoff())
-　　.forEach(p =&gt; { 
-　　　outStream.write("&lt;div&gt;\n");
-　　　zztmp(outStream, p);
-　　　outStream.write(`&lt;p&gt;location: ${p.location}&lt;/p&gt;\n`); 
-　　　outStream.write("&lt;/div&gt;\n");
-　　});
+ photos
+  .filter(p =&gt; p.date &gt; recentDateCutoff())
+  .forEach(p =&gt; { 
+   outStream.write("&lt;div&gt;\n");
+   zztmp(outStream, p);
+   outStream.write(`&lt;p&gt;location: ${p.location}&lt;/p&gt;\n`); 
+   outStream.write("&lt;/div&gt;\n");
+  });
 }
 
 function emitPhotoData(outStream, photo) { 
-　zztmp(outStream, photo);
-　outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
+ zztmp(outStream, photo);
+ outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
 
 function zztmp(outStream, photo) { 
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
-　outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
 
   最后，我将zztmp改名为原函数的名字emitPhotoData，完成本次重构。
   function renderPerson(outStream, person) {
-　outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
-　renderPhoto(outStream, person.photo); 
-　emitPhotoData(outStream, person.photo);
-　outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
+ renderPhoto(outStream, person.photo); 
+ emitPhotoData(outStream, person.photo);
+ outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
 }
 
 function listRecentPhotos(outStream, photos) { 
-　photos
-　　.filter(p =&gt; p.date &gt; recentDateCutoff())
-　　.forEach(p =&gt; { 
-　　　outStream.write("&lt;div&gt;\n");
-　　　emitPhotoData(outStream, p);
-　　　outStream.write(`&lt;p&gt;location: ${p.location}&lt;/p&gt;\n`); 
-　　　outStream.write("&lt;/div&gt;\n");
-　　});
+ photos
+  .filter(p =&gt; p.date &gt; recentDateCutoff())
+  .forEach(p =&gt; { 
+   outStream.write("&lt;div&gt;\n");
+   emitPhotoData(outStream, p);
+   outStream.write(`&lt;p&gt;location: ${p.location}&lt;/p&gt;\n`); 
+   outStream.write("&lt;/div&gt;\n");
+  });
 }
 
 function emitPhotoData(outStream, photo) {
-　outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
-　outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
+ outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
+ outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
 
-  8.5　以函数调用取代内联代码（Replace Inline Code with Function Call）
+ ## 8.5 以函数调用取代内联代码（Replace Inline Code with Function Call）
 
   
   let appliesToMass = false; 
@@ -934,7 +928,7 @@ for(const s of states) {
     测试。
   
 
-  8.6　移动语句（Slide Statements）
+##  8.6 移动语句（Slide Statements）
 
   曾用名：合并重复的代码片段（Consolidate Duplicate Conditional Fragments）
 
@@ -1024,20 +1018,20 @@ a = a + 5;
   在下面这个例子中，两个条件分支里都有一个相同的语句：
   let result;
 if (availableResources.length === 0) {
-　result = createResource(); 
-　allocatedResources.push(result);
+ result = createResource(); 
+ allocatedResources.push(result);
 } else {
-　result = availableResources.pop();
-　allocatedResources.push(result);
+ result = availableResources.pop();
+ allocatedResources.push(result);
 }
 return result;
 
   我可以将这两句重复代码从条件分支中移走，只在if-else块的末尾保留一句。
   let result;
 if (availableResources.length === 0) {
-　result = createResource();
+ result = createResource();
 } else {
-　result = availableResources.pop();
+ result = availableResources.pop();
 }
 allocatedResources.push(result);
 return result;
@@ -1050,26 +1044,26 @@ return result;
 
   但最后，我还是选择在本重构手法中介绍如何移动范围更大的代码片段，因为我自己平时就是这么做的。我只有在处理大范围的语句移动遇到困难时才会变得小步、一次只移动一条语句，但即便是这样的困难我也很少遇见。无论如何，当代码过于复杂凌乱时，小步的移动通常会更加顺利。
 
-  8.7　拆分循环（Split Loop）
+ ## 8.7 拆分循环（Split Loop）
 
   
   let averageAge = 0;
 let totalSalary = 0;
 for (const p of people) {
-　averageAge += p.age;
-　totalSalary += p.salary;
+ averageAge += p.age;
+ totalSalary += p.salary;
 }
 averageAge = averageAge / people.length;
 
   
   let totalSalary = 0;
 for (const p of people) { 
-　totalSalary += p.salary;
+ totalSalary += p.salary;
 }
 
 let averageAge = 0;
 for (const p of people) {
-　averageAge += p.age;
+ averageAge += p.age;
 }
 averageAge = averageAge / people.length;
 
@@ -1099,8 +1093,8 @@ averageAge = averageAge / people.length;
   let youngest = people[0] ? people[0].age : Infinity; 
 let totalSalary = 0;
 for (const p of people) {
-　if (p.age &lt; youngest) youngest = p.age; 
-　totalSalary += p.salary;
+ if (p.age &lt; youngest) youngest = p.age; 
+ totalSalary += p.salary;
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
@@ -1109,12 +1103,12 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
   let youngest = people[0] ? people[0].age : Infinity; 
 let totalSalary = 0;
 for (const p of people) {
-　if (p.age &lt; youngest) youngest = p.age; 
-　totalSalary += p.salary;
+ if (p.age &lt; youngest) youngest = p.age; 
+ totalSalary += p.salary;
 }
 for (const p of people) {
-　if (p.age &lt; youngest) youngest = p.age; 
-　totalSalary += p.salary;
+ if (p.age &lt; youngest) youngest = p.age; 
+ totalSalary += p.salary;
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
@@ -1123,13 +1117,13 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
   let youngest = people[0] ? people[0].age : Infinity; 
 let totalSalary = 0;
 for (const p of people) {
-　if (p.age &lt; youngest) youngest = p.age;
-　totalSalary += p.salary;
+ if (p.age &lt; youngest) youngest = p.age;
+ totalSalary += p.salary;
 }
 
 for (const p of people) {
-　if (p.age &lt; youngest) youngest = p.age;
-　totalSalary += p.salary;
+ if (p.age &lt; youngest) youngest = p.age;
+ totalSalary += p.salary;
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
@@ -1137,12 +1131,12 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
   至此，拆分循环这个手法本身的内容就结束了。但本手法的意义不仅在于拆分出循环本身，而且在于它为进一步优化提供了良好的起点——下一步我通常会寻求将每个循环提炼到独立的函数中。在做提炼之前，我得先用移动语句（223）微调一下代码顺序，将与循环相关的变量先搬移到一起：
   let totalSalary = 0;
 for (const p of people) {
-　totalSalary += p.salary;
+ totalSalary += p.salary;
 }
 
 let youngest = people[0] ? people[0].age : Infinity;
 for (const p of people) {
-　if (p.age &lt; youngest) youngest = p.age;
+ if (p.age &lt; youngest) youngest = p.age;
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
@@ -1151,32 +1145,32 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
   return `youngestAge: ${youngestAge()}, totalSalary: ${totalSalary()}`;
 
 function totalSalary() {
-　let totalSalary = 0;
-　for (const p of people) {
-　　totalSalary += p.salary;
-　}
-　return totalSalary;
+ let totalSalary = 0;
+ for (const p of people) {
+  totalSalary += p.salary;
+ }
+ return totalSalary;
 }
 
 function youngestAge() {
-　let youngest = people[0] ? people[0].age : Infinity;
-　for (const p of people) {
-　　if (p.age &lt; youngest) youngest = p.age;
-　}
-　return youngest;
+ let youngest = people[0] ? people[0].age : Infinity;
+ for (const p of people) {
+  if (p.age &lt; youngest) youngest = p.age;
+ }
+ return youngest;
 }
 
   对于像totalSalary这样的累加计算，我绝少能抵挡得住进一步使用以管道取代循环（231）重构它的诱惑；而对于youngestAge的计算，显然可以用替换算法（195）替之以更好的算法。
   return `youngestAge: ${youngestAge()}, totalSalary: ${totalSalary()}`; 
 
 function totalSalary() {
-　return people.reduce((total,p) =&gt; total + p.salary, 0);
+ return people.reduce((total,p) =&gt; total + p.salary, 0);
 }
 function youngestAge() {
-　return Math.min(...people.map(p =&gt; p.age));
+ return Math.min(...people.map(p =&gt; p.age));
 }
 
-  8.8　以管道取代循环（Replace Loop with Pipeline）
+##  8.8 以管道取代循环（Replace Loop with Pipeline）
 
   
   const names = [];
@@ -1229,84 +1223,84 @@ Chennai, India, +91 44 660 44766
 
   下面这个acquireData函数的作用是从数据中筛选出印度的所有办公室，并返回办公室所在的城市（city）信息和联系电话（telephone number）。
   function acquireData(input) { 
-　const lines = input.split("\n");
-　let firstLine = true;
-　const result = [];
-　for (const line of lines) {
-　　if (firstLine) {
-　　　firstLine = false; 
-　　　continue;
-　　}
-　　if (line.trim() === "") continue; 
-　　const record = line.split(",");
-　　if (record[1].trim() === "India") {
-　　　result.push({city: record[0].trim(), phone: record[2].trim()});
-　　}
-　}
-　return result;
+ const lines = input.split("\n");
+ let firstLine = true;
+ const result = [];
+ for (const line of lines) {
+  if (firstLine) {
+   firstLine = false; 
+   continue;
+  }
+  if (line.trim() === "") continue; 
+  const record = line.split(",");
+  if (record[1].trim() === "India") {
+   result.push({city: record[0].trim(), phone: record[2].trim()});
+  }
+ }
+ return result;
 }
 
   这个循环略显复杂，我希望能用一组管道操作来替换它。
 
   第一步是先创建一个独立的变量，用来存放参与循环过程的集合值。
   function acquireData(input) { 
-　const lines = input.split("\n");
-　let firstLine = true;
-　const result = [];
-　const loopItems = lines
-　for (const line of loopItems) {
-　　if (firstLine) {
-　　　firstLine = false;
-　　　continue;
-　　}
-　　if (line.trim() === "") continue; 
-　　const record = line.split(",");
-　　if (record[1].trim() === "India") {
-　　　result.push({city: record[0].trim(), phone: record[2].trim()});
-　　}
-　}
-　return result;
+ const lines = input.split("\n");
+ let firstLine = true;
+ const result = [];
+ const loopItems = lines
+ for (const line of loopItems) {
+  if (firstLine) {
+   firstLine = false;
+   continue;
+  }
+  if (line.trim() === "") continue; 
+  const record = line.split(",");
+  if (record[1].trim() === "India") {
+   result.push({city: record[0].trim(), phone: record[2].trim()});
+  }
+ }
+ return result;
 }
 
   循环第一部分的作用是在忽略CSV文件的第一行数据。这其实是一个切片（slice）操作，因此我先从循环中移除这部分代码，并在集合变量的声明后面新增一个对应的slice运算来替代它。
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　let firstLine = true;
-　const result = []; 
-　const loopItems = lines
-　　　　.slice(1);
-　for (const line of loopItems) {
-　　if (firstLine) {
-　　　firstLine = false;
-　　　continue;
-　　}
-　　if (line.trim() === "") continue; 
-　　const record = line.split(",");
-　　if (record[1].trim() === "India") {
-　　　result.push({city: record[0].trim(), phone: record[2].trim()});
-　　}
-　}
-　return result;
+ const lines = input.split("\n"); 
+ let firstLine = true;
+ const result = []; 
+ const loopItems = lines
+    .slice(1);
+ for (const line of loopItems) {
+  if (firstLine) {
+   firstLine = false;
+   continue;
+  }
+  if (line.trim() === "") continue; 
+  const record = line.split(",");
+  if (record[1].trim() === "India") {
+   result.push({city: record[0].trim(), phone: record[2].trim()});
+  }
+ }
+ return result;
 }
 
   从循环中删除代码还有一个好处，那就是firstLine这个控制变量也可以一并移除了——无论何时，删除控制变量总能使我身心愉悦。
 
   该循环的下一个行为是要移除数据中的所有空行。这同样可用一个过滤（filter）运算替代之。
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　const result = [];
-　const loopItems = lines
-　　　　.slice(1)
-　　　　.filter(line =&gt; line.trim() !== "")
-　　　　;
-　for (const line of loopItems) {
-　　if (line.trim() === "") continue;
-　　const  record = line.split(",");
-　　if (record[1].trim() === "India") {
-　　　result.push({city: record[0].trim(), phone: record[2].trim()});
-　　}
-　}
-　return result;
+ const lines = input.split("\n"); 
+ const result = [];
+ const loopItems = lines
+    .slice(1)
+    .filter(line =&gt; line.trim() !== "")
+    ;
+ for (const line of loopItems) {
+  if (line.trim() === "") continue;
+  const  record = line.split(",");
+  if (record[1].trim() === "India") {
+   result.push({city: record[0].trim(), phone: record[2].trim()});
+  }
+ }
+ return result;
 }
 
   
@@ -1315,86 +1309,86 @@ Chennai, India, +91 44 660 44766
 
   接下来是将数据的一行转换成数组，这明显可以用一个map运算替代。然后我们还发现，原来的record命名其实有误导性，它没有体现出“转换得到的结果是数组”这个信息，不过既然现在还在做其他重构，先不动它会比较安全，回头再为它改名也不迟。
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　const result = [];
-　const loopItems = lines
-　　　　.slice(1)
-　　　　.filter(line =&gt; line.trim() !== "")
-　　　　.map(line =&gt; line.split(","))
-　　　　;
-　for (const line of loopItems) { 
-　　const record = line;.split(",");
-　　if (record[1].trim() === "India") {
-　　　result.push({city: record[0].trim(), phone: record[2].trim()});
-　　}
-　}
-　return result;
+ const lines = input.split("\n"); 
+ const result = [];
+ const loopItems = lines
+    .slice(1)
+    .filter(line =&gt; line.trim() !== "")
+    .map(line =&gt; line.split(","))
+    ;
+ for (const line of loopItems) { 
+  const record = line;.split(",");
+  if (record[1].trim() === "India") {
+   result.push({city: record[0].trim(), phone: record[2].trim()});
+  }
+ }
+ return result;
 }
 
   然后又是一个过滤（filter）操作，只从结果中筛选出印度办公室的记录。
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　const result = [];
-　const loopItems = lines
-　　　　.slice(1)
-　　　　.filter(line =&gt; line.trim() !== "")
-　　　　.map(line =&gt; line.split(","))
-　　　　.filter(record =&gt; record[1].trim() === "India")
-　　　　;
-　for (const line of loopItems) { 
-　　const record = line;
-　　if (record[1].trim() === "India") {
-　　　result.push({city: record[0].trim(), phone: record[2].trim()});
-　　}
-　}
-　return result;
+ const lines = input.split("\n"); 
+ const result = [];
+ const loopItems = lines
+    .slice(1)
+    .filter(line =&gt; line.trim() !== "")
+    .map(line =&gt; line.split(","))
+    .filter(record =&gt; record[1].trim() === "India")
+    ;
+ for (const line of loopItems) { 
+  const record = line;
+  if (record[1].trim() === "India") {
+   result.push({city: record[0].trim(), phone: record[2].trim()});
+  }
+ }
+ return result;
 }
 
   最后再把结果映射（map）成需要的记录格式：
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　const result = [];
-　const loopItems = lines
-　　　　.slice(1)
-　　　　.filter(line =&gt; line.trim() !== "")
-　　　　.map(line =&gt; line.split(","))
-　　　　.filter(record =&gt; record[1].trim() === "India")
-　　　　.map(record =&gt; ({city: record[0].trim(), phone: record[2].trim()}))
-　　　　;
-　for (const line of loopItems) { 
-　　const record = line; 
-　　result.push(line);
-　}
-　return result;
+ const lines = input.split("\n"); 
+ const result = [];
+ const loopItems = lines
+    .slice(1)
+    .filter(line =&gt; line.trim() !== "")
+    .map(line =&gt; line.split(","))
+    .filter(record =&gt; record[1].trim() === "India")
+    .map(record =&gt; ({city: record[0].trim(), phone: record[2].trim()}))
+    ;
+ for (const line of loopItems) { 
+  const record = line; 
+  result.push(line);
+ }
+ return result;
 }
 
   现在，循环剩余的唯一作用就是对累加变量赋值了。我可以将上面管道产出的结果赋值给该累加变量，然后删除整个循环：
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　const result = lines
-　　　　.slice(1)
-　　　　.filter(line =&gt; line.trim() !== "")
-　　　　.map(line =&gt; line.split(","))
-　　　　.filter(record =&gt; record[1].trim() === "India")
-　　　　.map(record =&gt; ({city: record[0].trim(), phone: record[2].trim()}))
-　　　　;
-　for (const line of loopItems) { 
-　　const record = line; 
-　　result.push(line);
-　}
-　return result;
+ const lines = input.split("\n"); 
+ const result = lines
+    .slice(1)
+    .filter(line =&gt; line.trim() !== "")
+    .map(line =&gt; line.split(","))
+    .filter(record =&gt; record[1].trim() === "India")
+    .map(record =&gt; ({city: record[0].trim(), phone: record[2].trim()}))
+    ;
+ for (const line of loopItems) { 
+  const record = line; 
+  result.push(line);
+ }
+ return result;
 }
 
   以上就是本手法的全部精髓所在了。不过后续还有些清理工作可做：我内联了result变量，为一些函数变量改名，最后还对代码进行布局，让它读起来更像个表格。
   function acquireData(input) { 
-　const lines = input.split("\n"); 
-　return lines
-　　　　.slice (1)
-　　　　.filter (line =&gt; line.trim() !== "")
-　　　　.map   (line =&gt; line.split(","))
-　　　　.filter (fields =&gt; fields[1].trim() === "India")
-　　　　.map   (fields =&gt; ({city: fields[0].trim(), phone: fields[2].trim()}))
-　　　　;
+ const lines = input.split("\n"); 
+ return lines
+    .slice (1)
+    .filter (line =&gt; line.trim() !== "")
+    .map   (line =&gt; line.split(","))
+    .filter (fields =&gt; fields[1].trim() === "India")
+    .map   (fields =&gt; ({city: fields[0].trim(), phone: fields[2].trim()}))
+    ;
 }
 
   我还想过是否要内联lines变量，但我感觉它还算能解释该行代码的意图，因此我还是将它留在了原处。
@@ -1403,7 +1397,7 @@ Chennai, India, +91 44 660 44766
 
   如果想了解更多用集合管道替代循环的案例，可以参考我的文章“Refactoring with Loops and Collection Pipelines”[mf-ref-pipe]。
 
-  8.9　移除死代码（Remove Dead Code）
+##  8.9 移除死代码（Remove Dead Code）
 
   
   if(false) { 

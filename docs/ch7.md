@@ -1,10 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-  
-
-  
-
-  第7章　封装
+# 第7章 封装
 
   分解模块时最重要的标准，也许就是识别出那些模块应该对外界隐藏的小秘密了[Parnas]。数据结构无疑是最常见的一种秘密，我可以用封装记录（162）或封装集合（170）手法来隐藏它们的细节。即便是基本类型的数据，也能通过以对象取代基本类型（174）进行封装——这样做后续所带来的巨大收益通常令人惊喜。另一项经常在重构时挡道的是临时变量，我需要确保它们的计算次序正确，还得保证其他需要它们的地方能获得其值。这里以查询取代临时变量（178）手法可以帮上大忙，特别是在分解一个过长的函数时。
 
@@ -14,7 +8,7 @@
 
   类与模块已然是施行封装的最大实体了，但小一点的函数对于封装实现细节也有所裨益。有时候，我可能需要将一个算法完全替换掉，这时我可以用提炼函数（106）将算法包装到函数中，然后使用替换算法（195）。
 
-  7.1　封装记录（Encapsulate Record）
+##  7.1 封装记录（Encapsulate Record）
 
   曾用名：以数据类取代记录（Replace Record with Data Class）
 
@@ -23,14 +17,14 @@
 
   
   class Organization { 
-　constructor(data) {
-　　this._name = data.name; 
-　　this._country = data.country;
-　}
-　get name()    {return this._name;} 
-　set name(arg) {this._name = arg;}
-　get country()    {return this._country;} 
-　set country(arg) {this._country = arg;}
+ constructor(data) {
+  this._name = data.name; 
+  this._country = data.country;
+ }
+ get name()    {return this._name;} 
+ set name(arg) {this._name = arg;}
+ get country()    {return this._country;} 
+ set country(arg) {this._country = arg;}
 }
 
   动机
@@ -134,14 +128,14 @@ function getOrganization() {return organization;}
 
   我还倾向于把_data里的字段展开到对象中。
   class Organization { 
-　constructor(data) {
-　　this._name = data.name; 
-　　this._country = data.country;
-　}
-　get name()    {return this._name;}
-　set name(aString) {this._name = aString;} 
-　get country()    {return this._country;}
-　set country(aCountryCode) {this._country = aCountryCode;}
+ constructor(data) {
+  this._name = data.name; 
+  this._country = data.country;
+ }
+ get name()    {return this._name;}
+ set name(aString) {this._name = aString;} 
+ get country()    {return this._country;}
+ set country(aCountryCode) {this._country = aCountryCode;}
 }
 
   这样做有一个好处，能够使外界无须再引用原始的数据记录。直接持有原始的记录会破坏封装的完整性。但有时也可能不适合将对象展开到独立的字段里，此时我就会先将_data复制一份，再进行赋值。
@@ -152,25 +146,25 @@ function getOrganization() {return organization;}
 
   作为例子，这里有一个嵌套层级更深的数据：它是一组顾客信息的集合，保存在散列映射中，并通过顾客ID进行索引。
   "1920": {
-　name: "martin", 
-　id: "1920",
-　usages: { 
-　　"2016": {
-　　　"1": 50,
-　　　"2": 55,
-　　　// remaining months of the year
-　　}, 
-　　"2015": {
-　　　"1": 70,
-　　　"2": 63,
-　　　// remaining months of the year
-　　}
-　}
+ name: "martin", 
+ id: "1920",
+ usages: { 
+  "2016": {
+   "1": 50,
+   "2": 55,
+   // remaining months of the year
+  }, 
+  "2015": {
+   "1": 70,
+   "2": 63,
+   // remaining months of the year
+  }
+ }
 },
 "38673": {
-　name: "neal",
-　id: "38673",
-　// more customers in a similar form
+ name: "neal",
+ id: "38673",
+ // more customers in a similar form
 
   对嵌套数据的更新和读取可以进到更深的层级。
 
@@ -179,9 +173,9 @@ function getOrganization() {return organization;}
 
   读取的例子...
   function compareUsage (customerID, laterYear, month) {
-　const later = customerData[customerID].usages[laterYear][month]; 
-　const earlier = customerData[customerID].usages[laterYear - 1][month]; 
-　return {laterAmount: later, change: later - earlier};
+ const later = customerData[customerID].usages[laterYear][month]; 
+ const earlier = customerData[customerID].usages[laterYear - 1][month]; 
+ return {laterAmount: later, change: later - earlier};
 }
 
   对这样的数据施行封装，第一步仍是封装变量（132）。
@@ -289,7 +283,7 @@ function setRawDataOfCustomers(arg) {customerData = new CustomerData(arg);}
 
   另一种方案需要更多工作，但能提供更可靠的控制粒度：对每个字段循环应用封装记录。我会把顾客（customer）记录变成一个类，对其用途（usage）字段应用封装集合（170），并为它创建一个类。然后我就能通过访问函数来控制其更新点，比如说对用途（usage）对象应用将引用对象改为值对象（252）。但处理一个大型的数据结构时，这种方案异常繁复，如果对该数据结构的更新点没那么多，其实大可不必这么做。有时，合理混用取值函数和新对象可能更明智，即使用取值函数来封装数据的深层查找操作，但更新数据时则用对象来包装其结构，而非直接操作未经封装的数据。我在“Refactoring Code to Load a Document”[mf-ref-doc]这篇文章中讨论了更多的细节，有兴趣的读者可移步阅读。
 
-  7.2　封装集合（Encapsulate Collection）
+##  7.2 封装集合（Encapsulate Collection）
 
   
   class Person {
@@ -417,7 +411,7 @@ removeCourse(aCourse, fnIfAbsent = () =&gt; {throw new RangeError();}) {
 
   总的来讲，我觉得对集合保持适度的审慎是有益的，我宁愿多复制一份数据，也不愿去调试因意外修改集合招致的错误。修改操作并不总是显而易见的，比如，在JavaScript中原生的数组排序函数sort()就会修改原数组，而在其他语言中默认都是为更改集合的操作返回一份副本。任何负责管理集合的类都应该总是返回数据副本，但我还养成了一个习惯，只要我做的事看起来可能改变集合，我也会返回一个副本。
 
-  7.3　以对象取代基本类型（Replace Primitive with Object）
+##  7.3 以对象取代基本类型（Replace Primitive with Object）
 
   曾用名：以对象取代数据值（Replace Data Value with Object）
 
@@ -555,7 +549,7 @@ lowerThan(other) {return this._index &lt; other._index;}
   highPriorityCount = orders.filter(o =&gt; o.priority.higherThan(new Priority("normal")))
                           .length;
 
-  7.4　以查询取代临时变量（Replace Temp with Query）
+ ## 7.4 以查询取代临时变量（Replace Temp with Query）
 
   
   const basePrice = this._quantity * this._itemPrice; 
@@ -633,55 +627,55 @@ else
   先从basePrice开始，我先把它声明成const并运行测试。这可以很好地防止我遗漏了对变量的其他赋值点——对于这么个小函数是不太可能的，但当我处理更大的函数时就不一定了。
 
   class Order...
-  　constructor(quantity, item) { 
-　　this._quantity = quantity; 
-　　this._item = item;
-　}
+   constructor(quantity, item) { 
+  this._quantity = quantity; 
+  this._item = item;
+ }
 
-　get price() {
-　　const basePrice = this._quantity * this._item.price; 
-　　var discountFactor = 0.98;
-　　if (basePrice &gt; 1000) discountFactor -= 0.03; 
-　　return basePrice * discountFactor;
-　}
+ get price() {
+  const basePrice = this._quantity * this._item.price; 
+  var discountFactor = 0.98;
+  if (basePrice &gt; 1000) discountFactor -= 0.03; 
+  return basePrice * discountFactor;
+ }
 }
 
   然后我把赋值操作的右边提炼成一个取值函数。
 
   class Order...
   get price() {
-　const basePrice = this.basePrice;
-　var discountFactor = 0.98;
-　if (basePrice &gt; 1000) discountFactor -= 0.03; 
-　return basePrice * discountFactor;
+ const basePrice = this.basePrice;
+ var discountFactor = 0.98;
+ if (basePrice &gt; 1000) discountFactor -= 0.03; 
+ return basePrice * discountFactor;
 }
 
-　get basePrice() {
-　　return this._quantity * this._item.price;
-　}
+ get basePrice() {
+  return this._quantity * this._item.price;
+ }
 
   测试，然后应用内联变量（123）。
 
   class Order...
   get price() {
-　const basePrice = this.basePrice;
-　var discountFactor = 0.98;
-　if (this.basePrice &gt; 1000) discountFactor -= 0.03; 
-　return this.basePrice * discountFactor;
+ const basePrice = this.basePrice;
+ var discountFactor = 0.98;
+ if (this.basePrice &gt; 1000) discountFactor -= 0.03; 
+ return this.basePrice * discountFactor;
 }
 
   接下来我对discountFactor重复同样的步骤，先是应用提炼函数（106）。
 
   class Order...
   get price() {
-　const discountFactor = this.discountFactor;
-　return this.basePrice * discountFactor;
+ const discountFactor = this.discountFactor;
+ return this.basePrice * discountFactor;
 }
 
-　get discountFactor() {
-　　var discountFactor = 0.98;
-　　if (this.basePrice &gt; 1000) discountFactor -= 0.03; 
-　　return discountFactor;
+ get discountFactor() {
+  var discountFactor = 0.98;
+  if (this.basePrice &gt; 1000) discountFactor -= 0.03; 
+  return discountFactor;
 }
 
   这里我需要将对discountFactor的两处赋值一起搬移到新提炼的函数中，之后就可以将原变量一起声明为const。
@@ -691,23 +685,23 @@ else
   return this.basePrice * this.discountFactor;
 }
 
-  7.5　提炼类（Extract Class）
+##  7.5 提炼类（Extract Class）
 
   反向重构：内联类（186）
 
   
   class Person {
-　get officeAreaCode() {return this._officeAreaCode;} 
-　get officeNumber()   {return this._officeNumber;}
+ get officeAreaCode() {return this._officeAreaCode;} 
+ get officeNumber()   {return this._officeNumber;}
 
   
   class Person {
-　get officeAreaCode() {return this._telephoneNumber.areaCode;} 
-　get officeNumber()   {return this._telephoneNumber.number;}
+ get officeAreaCode() {return this._telephoneNumber.areaCode;} 
+ get officeNumber()   {return this._telephoneNumber.number;}
 }
 class TelephoneNumber {
-　get areaCode() {return this._areaCode;} 
-　get number()   {return this._number;}
+ get areaCode() {return this._areaCode;} 
+ get number()   {return this._number;}
 }
 
   动机
@@ -747,11 +741,11 @@ class TelephoneNumber {
   我们从一个简单的Person类开始。
 
   class Person...
-  get name() 　 {return this._name;} 
+  get name()   {return this._name;} 
 set name(arg) {this._name = arg;}
 get telephoneNumber() {return `(${this.officeAreaCode}) ${this.officeNumber}`;} 
-get officeAreaCode() 　　{return this._officeAreaCode;}
-set officeAreaCode(arg)　{this._officeAreaCode = arg;} 
+get officeAreaCode()   {return this._officeAreaCode;}
+set officeAreaCode(arg) {this._officeAreaCode = arg;} 
 get officeNumber() {return this._officeNumber;}
 set officeNumber(arg) {this._officeNumber = arg;}
 
@@ -819,24 +813,24 @@ set officeNumber(arg) {this._telephoneNumber.number = arg;}
 
   “电话号码”对象一般还具有复用价值，因此我考虑将新提炼的类暴露给更多的客户端。需要访问TelephoneNumber对象时，只须把Person类中那些office开头的访问函数搬移过来并略作修改即可。但这样TelephoneNumber就更像一个值对象（Value Object）[mf-vo]了，因此我会先对它使用将引用对象改为值对象（252）（那个重构手法所用的范例，正是基于本章电话号码例子的延续）。
 
-  7.6　内联类（Inline Class）
+ ## 7.6 内联类（Inline Class）
 
   反向重构：提炼类（182）
 
   
   class Person {
-　get officeAreaCode() {return this._telephoneNumber.areaCode;} 
-　get officeNumber() 　{return this._telephoneNumber.number;}
+ get officeAreaCode() {return this._telephoneNumber.areaCode;} 
+ get officeNumber()  {return this._telephoneNumber.number;}
 }
 class TelephoneNumber {
-　get areaCode() {return this._areaCode;} 
-　get number() {return this._number;}
+ get areaCode() {return this._areaCode;} 
+ get number() {return this._number;}
 }
 
   
   class Person {
-　get officeAreaCode() {return this._officeAreaCode;} 
-　get officeNumber()　 {return this._officeNumber;}
+ get officeAreaCode() {return this._officeAreaCode;} 
+ get officeNumber()  {return this._officeNumber;}
 
   动机
 
@@ -860,24 +854,24 @@ class TelephoneNumber {
 
   下面这个类存储了一次物流运输（shipment）的若干跟踪信息（tracking information）。
   class TrackingInformation {
-　get shippingCompany()    {return this._shippingCompany;} 
-　set shippingCompany(arg) {this._shippingCompany = arg;} 
-　get trackingNumber()    {return this._trackingNumber;} 
-　set trackingNumber(arg) {this._trackingNumber = arg;} 
-　get display()            {
-　　return `${this.shippingCompany}: ${this.trackingNumber}`;
-　}
+ get shippingCompany()    {return this._shippingCompany;} 
+ set shippingCompany(arg) {this._shippingCompany = arg;} 
+ get trackingNumber()    {return this._trackingNumber;} 
+ set trackingNumber(arg) {this._trackingNumber = arg;} 
+ get display()            {
+  return `${this.shippingCompany}: ${this.trackingNumber}`;
+ }
 }
 
   它作为Shipment（物流）类的一部分被使用。
 
   class Shipment...
   get trackingInfo() {
-　return this._trackingInformation.display;
+ return this._trackingInformation.display;
 }
 get trackingInformation() {return this._trackingInformation;} 
 set trackingInformation(aTrackingInformation) {
-　this._trackingInformation = aTrackingInformation;
+ this._trackingInformation = aTrackingInformation;
 }
 
   TrackingInformation类过去可能有很多光荣职责，但现在我觉得它已不再能肩负起它的责任，因此我希望将它内联到Shipment类里。
@@ -914,14 +908,14 @@ set shippingCompany(arg) {this._trackingInformation._shippingCompany = arg;}
 
   class Shipment...
   get trackingInfo() {
-　return `${this.shippingCompany}: ${this.trackingNumber}`;
+ return `${this.shippingCompany}: ${this.trackingNumber}`;
 }
 get shippingCompany()    {return this._shippingCompany;} 
 set shippingCompany(arg) {this._shippingCompany = arg;} 
 get trackingNumber()    {return this._trackingNumber;} 
 set trackingNumber(arg) {this._trackingNumber = arg;}
 
-  7.7　隐藏委托关系（Hide Delegate）
+ ## 7.7 隐藏委托关系（Hide Delegate）
 
   反向重构：移除中间人（192）
 
@@ -962,7 +956,7 @@ class Person {
 
   class Person...
   constructor(name) { 
-　this._name = name;
+ this._name = name;
 }
 get name() {return this._name;}
 get department()    {return this._department;} 
@@ -991,7 +985,7 @@ set manager(arg) {this._manager = arg;}
 
   只要完成了对Department所有函数的修改，并相应修改了Person的所有客户端，我就可以移除Person中的department访问函数了。
 
-  7.8　移除中间人（Remove Middle Man）
+ ## 7.8 移除中间人（Remove Middle Man）
 
   反向重构：隐藏委托关系（189）
 
@@ -999,7 +993,7 @@ set manager(arg) {this._manager = arg;}
   manager = aPerson.manager; 
 
 class Person {
-　get manager() {return this.department.manager;}
+ get manager() {return this.department.manager;}
 
   
   manager = aPerson.department.manager;
@@ -1060,28 +1054,28 @@ class Person {
 
   然后我对manager方法应用内联函数（115），一口气替换它的所有调用点。
 
-  7.9　替换算法（Substitute Algorithm）
+ ## 7.9 替换算法（Substitute Algorithm）
 
   
   function foundPerson(people) {
-　for(let i = 0; i &lt; people.length; i++) { 
-　　if (people[i] === "Don") {
-　　　return "Don";
-　　}
-　　if (people[i] === "John") { 
-　　　return "John";
-　　}
-　　if (people[i] === "Kent") { 
-　　　return "Kent";
-　　}
-　}
-　return "";
+ for(let i = 0; i &lt; people.length; i++) { 
+  if (people[i] === "Don") {
+   return "Don";
+  }
+  if (people[i] === "John") { 
+   return "John";
+  }
+  if (people[i] === "Kent") { 
+   return "Kent";
+  }
+ }
+ return "";
 }
 
   
   function foundPerson(people) {
-　const candidates = ["Don", "John", "Kent"];
-　return people.find(p =&gt; candidates.includes(p)) || '';
+ const candidates = ["Don", "John", "Kent"];
+ return people.find(p =&gt; candidates.includes(p)) || '';
 }
 
   动机

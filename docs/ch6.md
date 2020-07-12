@@ -1,10 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-  
-
-  
-
-  第6章　第一组重构
+# 第6章 第一组重构
 
   在重构名录的开头，我首先介绍一组我认为最有用的重构。
 
@@ -14,7 +8,7 @@
 
   形成函数并给函数命名，这是低层级重构的精髓。有了函数以后，就需要把它们组合成更高层级的模块。我会使用函数组合成类（144），把函数和它们操作的数据一起组合成类。另一条路径是用函数组合成变换（149）将函数组合成变换式（transform），这对于处理只读数据尤为便利。再往前一步，常常可以用拆分阶段（154）将这些模块组成界限分明的处理阶段。
 
-  6.1　提炼函数（Extract Function）
+##  6.1 提炼函数（Extract Function）
 
   曾用名：提炼函数（Extract Method）
 
@@ -22,24 +16,24 @@
 
   
   function printOwing(invoice) {
-　printBanner();
-　let outstanding = calculateOutstanding();
+ printBanner();
+ let outstanding = calculateOutstanding();
 
-　//print details
-　console.log(`name: ${invoice.customer}`);
-　console.log(`amount: ${outstanding}`);
+ //print details
+ console.log(`name: ${invoice.customer}`);
+ console.log(`amount: ${outstanding}`);
 }
 
   
   function printOwing(invoice) {
-　printBanner();
-　let outstanding = calculateOutstanding();
-　printDetails(outstanding);
+ printBanner();
+ let outstanding = calculateOutstanding();
+ printDetails(outstanding);
 
-　function printDetails(outstanding) {
-　　console.log(`name: ${invoice.customer}`);
-　　console.log(`amount: ${outstanding}`);
-　}
+ function printDetails(outstanding) {
+  console.log(`name: ${invoice.customer}`);
+  console.log(`amount: ${outstanding}`);
+ }
 }
 
   动机
@@ -110,76 +104,76 @@
 
   在最简单的情况下，提炼函数易如反掌。请看下列函数：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　console.log("***********************");
-　console.log("**** Customer Owes ****");
-　console.log("***********************");
+ console.log("***********************");
+ console.log("**** Customer Owes ****");
+ console.log("***********************");
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　// record due date
-　const today = Clock.today;
-　invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+ // record due date
+ const today = Clock.today;
+ invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 
-　//print details
-　console.log(`name: ${invoice.customer}`);
-　console.log(`amount: ${outstanding}`);
-　console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
+ //print details
+ console.log(`name: ${invoice.customer}`);
+ console.log(`amount: ${outstanding}`);
+ console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
 
   你可能会好奇Clock.today是干什么的。这是一个Clock Wrapper[mf-cw]，也就是封装系统时钟调用的对象。我尽量避免在代码中直接调用Date.now()这样的函数，因为这会导致测试行为不可预测，以及在诊断故障时难以复制出错时的情况。
 
   我们可以轻松提炼出“打印横幅”的代码。我只需要剪切、粘贴再插入一个函数调用动作就行了：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　// record due date
-　const today = Clock.today;
-　invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+ // record due date
+ const today = Clock.today;
+ invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 
-　//print details
-　console.log(`name: ${invoice.customer}`); 
-　console.log(`amount: ${outstanding}`);
-　console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
+ //print details
+ console.log(`name: ${invoice.customer}`); 
+ console.log(`amount: ${outstanding}`);
+ console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
 function printBanner() {
-　console.log("***********************");
-　console.log("**** Customer Owes ****");
-　console.log("***********************");
+ console.log("***********************");
+ console.log("**** Customer Owes ****");
+ console.log("***********************");
 }
 
   同样，我还可以把“打印详细信息”部分也提炼出来：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　// record due date
-　const today = Clock.today;
-　invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+ // record due date
+ const today = Clock.today;
+ invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 
-　printDetails();
+ printDetails();
 
-　function printDetails() { 
-　　console.log(`name: ${invoice.customer}`); 
-　　console.log(`amount: ${outstanding}`);
-　　console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
+ function printDetails() { 
+  console.log(`name: ${invoice.customer}`); 
+  console.log(`amount: ${outstanding}`);
+  console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
 
   看起来提炼函数是一个极其简单的重构。但很多时候，情况会变得比较复杂。
@@ -190,64 +184,64 @@ function printBanner() {
 
   局部变量最简单的情况是：被提炼代码段只是读取这些变量的值，并不修改它们。这种情况下我可以简单地将它们当作参数传给目标函数。所以，如果我面对下列函数：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　// record due date
-　const today = Clock.today;
-　invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+ // record due date
+ const today = Clock.today;
+ invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 
-　//print details
-　console.log(`name: ${invoice.customer}`);
-　console.log(`amount: ${outstanding}`);
-　console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
+ //print details
+ console.log(`name: ${invoice.customer}`);
+ console.log(`amount: ${outstanding}`);
+ console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 
   就可以将“打印详细信息”这一部分提炼为带两个参数的函数：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　// record due date
-　const today = Clock.today;
-　invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+ // record due date
+ const today = Clock.today;
+ invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 
-　printDetails(invoice, outstanding);
+ printDetails(invoice, outstanding);
 }
 function printDetails(invoice, outstanding) {
-　console.log(`name: ${invoice.customer}`);
-　console.log(`amount: ${outstanding}`);
-　console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
+ console.log(`name: ${invoice.customer}`);
+ console.log(`amount: ${outstanding}`);
+ console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
 
   如果局部变量是一个数据结构（例如数组、记录或者对象），而被提炼代码段又修改了这个结构中的数据，也可以如法炮制。所以，“设置到期日”的逻辑也可以用同样的方式提炼出来：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　recordDueDate(invoice);
-　printDetails(invoice, outstanding);
+ recordDueDate(invoice);
+ printDetails(invoice, outstanding);
 }
 function recordDueDate(invoice) {
-　const today = Clock.today;
-　invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+ const today = Clock.today;
+ invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 }
 
   范例：对局部变量再赋值
@@ -258,86 +252,86 @@ function recordDueDate(invoice) {
 
   比较糟糕的情况是：被提炼代码段之外的代码也使用了这个变量。此时我需要返回修改后的值。我会用下面这个已经很眼熟的函数来展示该怎么做：
   function printOwing(invoice) {
-　let outstanding = 0;
+ let outstanding = 0;
 
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　recordDueDate(invoice);
-　printDetails(invoice, outstanding);
+ recordDueDate(invoice);
+ printDetails(invoice, outstanding);
 }
 
   前面的重构我都一步到位地展示了结果，因为它们都很简单。但这次我会一步一步展示“做法”里的每个步骤。
 
   首先，把变量声明移动到使用处之前。
   function printOwing(invoice) {
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　let outstanding = 0;
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ let outstanding = 0;
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　recordDueDate(invoice);
-　printDetails(invoice, outstanding);
+ recordDueDate(invoice);
+ printDetails(invoice, outstanding);
 }
 
   然后把想要提炼的代码复制到目标函数中。
   function printOwing(invoice) {
-　printBanner();
+ printBanner();
 
-　// calculate outstanding
-　let outstanding = 0;
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
+ // calculate outstanding
+ let outstanding = 0;
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
 
-　recordDueDate(invoice);
-　printDetails(invoice, outstanding);
+ recordDueDate(invoice);
+ printDetails(invoice, outstanding);
 }
 function calculateOutstanding(invoice) {
-　let outstanding = 0;
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
-　return outstanding;
+ let outstanding = 0;
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
+ return outstanding;
 }
 
   由于outstanding变量的声明已经被搬移到提炼出的新函数中，就不需要再将其作为参数传入了。outstanding是提炼代码段中唯一被重新赋值的变量，所以我可以直接返回它。
 
   我的JavaScript环境在编译期提供不了任何价值——简直还不如文本编辑器的语法分析有用，所以“做法”里的“编译”一步可以跳过了。下一件事是修改原来的代码，令其调用新函数。新函数返回了修改后的outstanding变量值，我需要将其存入原来的变量中。
   function printOwing(invoice) {
-　printBanner();
-　let outstanding = calculateOutstanding(invoice);
-　recordDueDate(invoice);
-　printDetails(invoice, outstanding);
+ printBanner();
+ let outstanding = calculateOutstanding(invoice);
+ recordDueDate(invoice);
+ printDetails(invoice, outstanding);
 }
 function calculateOutstanding(invoice) {
-　let outstanding = 0;
-　for (const o of invoice.orders) {
-　　outstanding += o.amount;
-　}
-　return outstanding;
+ let outstanding = 0;
+ for (const o of invoice.orders) {
+  outstanding += o.amount;
+ }
+ return outstanding;
 }
 
   在收工之前，我还要修改返回值的名字，使其符合我一贯的编码风格。
   function printOwing(invoice) {
-　printBanner();
-　const outstanding = calculateOutstanding(invoice);
-　recordDueDate(invoice);
-　printDetails(invoice, outstanding);
+ printBanner();
+ const outstanding = calculateOutstanding(invoice);
+ recordDueDate(invoice);
+ printDetails(invoice, outstanding);
 }
 function calculateOutstanding(invoice) {
-　let result = 0;
-　for (const o of invoice.orders) {
-　　result += o.amount;
-　}
-　return result;
+ let result = 0;
+ for (const o of invoice.orders) {
+  result += o.amount;
+ }
+ return result;
 }
 
   我还顺手把原来的outstanding变量声明成const的，令其在初始化之后不能再次被赋值。
@@ -348,7 +342,7 @@ function calculateOutstanding(invoice) {
 
   如果我想把提炼出的函数搬移到别的上下文（例如变成顶层函数），会引发一些有趣的问题。我偏好小步前进，所以我本能的做法是先提炼成嵌套函数，然后再将其移入新的上下文。但这种做法的麻烦在于处理局部变量，而这个困难无法提前发现，直到我开始最后的搬移时才突然暴露。从这个角度考虑，即便可以先提炼成嵌套函数，或许也应该至少将目标函数放在源函数的同级，这样我就能立即看出提炼的范围是否合理。
 
-  6.2　内联函数（Inline Function）
+##  6.2 内联函数（Inline Function）
 
   曾用名：内联函数（Inline Method）
 
@@ -356,16 +350,16 @@ function calculateOutstanding(invoice) {
 
   
   function getRating(driver) {
-　return moreThanFiveLateDeliveries(driver) ? 2 : 1;
+ return moreThanFiveLateDeliveries(driver) ? 2 : 1;
 }
 
 function moreThanFiveLateDeliveries(driver) {
-　return driver.numberOfLateDeliveries &gt; 5;
+ return driver.numberOfLateDeliveries &gt; 5;
 }
 
   
   function getRating(driver) {
-　return (driver.numberOfLateDeliveries &gt; 5) ? 2 : 1;
+ return (driver.numberOfLateDeliveries &gt; 5) ? 2 : 1;
 }
 
   动机
@@ -408,10 +402,10 @@ function moreThanFiveLateDeliveries(driver) {
 
   在最简单的情况下，这个重构简单得不值一提。一开始的代码是这样：
   function rating(aDriver) {
-　return moreThanFiveLateDeliveries(aDriver) ? 2 : 1;
+ return moreThanFiveLateDeliveries(aDriver) ? 2 : 1;
 }
 function moreThanFiveLateDeliveries(aDriver) { 
-　return aDriver.numberOfLateDeliveries &gt; 5;
+ return aDriver.numberOfLateDeliveries &gt; 5;
 }
 
   我只要把被调用的函数的return语句复制出来，粘贴到调用处，取代原本的函数调用，就行了。
@@ -421,11 +415,11 @@ function moreThanFiveLateDeliveries(aDriver) {
 
   不过实际情况可能不会这么简单，需要我多做一点儿工作，帮助代码融入它的新家。例如，开始时的代码与前面稍有不同：
   function rating(aDriver) {
-　return moreThanFiveLateDeliveries(aDriver) ? 2 : 1;
+ return moreThanFiveLateDeliveries(aDriver) ? 2 : 1;
 }
 
 function moreThanFiveLateDeliveries(dvr) {
-　return dvr.numberOfLateDeliveries &gt; 5;
+ return dvr.numberOfLateDeliveries &gt; 5;
 }
 
   几乎是一样的代码，但moreThanFiveLateDeliveries函数声明的形式参数名与调用处使用的变量名不同，所以我在内联时需要对代码做些微调。
@@ -435,38 +429,38 @@ function moreThanFiveLateDeliveries(dvr) {
 
   情况还可能更复杂。例如，请看下列代码：
   function reportLines(aCustomer) {
-　const lines = [];
-　gatherCustomerData(lines, aCustomer);
-　return lines;
+ const lines = [];
+ gatherCustomerData(lines, aCustomer);
+ return lines;
 }
 function gatherCustomerData(out, aCustomer) {
-　out.push(["name", aCustomer.name]);
-　out.push(["location", aCustomer.location]);
+ out.push(["name", aCustomer.name]);
+ out.push(["location", aCustomer.location]);
 }
 
   我要把gatherCustomerData内联到reportLines中，这时简单的剪切和粘贴就不够了。这段代码还不算很麻烦，大多数时候我还是一步到位地完成了重构，只是需要做些调整。如果想更谨慎些，也可以每次搬移一行代码：可以首先对第一行代码使用搬移语句到调用者（217）——我还是用简单的“剪切-粘贴-调整”方式进行。
   function reportLines(aCustomer) {
-　const lines = [];
-　lines.push(["name", aCustomer.name]);
-　gatherCustomerData(lines, aCustomer); 
-　return lines;
+ const lines = [];
+ lines.push(["name", aCustomer.name]);
+ gatherCustomerData(lines, aCustomer); 
+ return lines;
 }
 function gatherCustomerData(out, aCustomer) {
-　out.push(["name", aCustomer.name]); 
-　out.push(["location", aCustomer.location]);
+ out.push(["name", aCustomer.name]); 
+ out.push(["location", aCustomer.location]);
 }
 
   然后继续处理后面的代码行，直到完成整个重构。
   function reportLines(aCustomer) {
-　const lines = [];
-　lines.push(["name", aCustomer.name]);
-　lines.push(["location", aCustomer.location]);
-　return lines;
+ const lines = [];
+ lines.push(["name", aCustomer.name]);
+ lines.push(["location", aCustomer.location]);
+ return lines;
 }
 
   重点在于始终小步前进。大多数时候，由于我平时写的函数都很小，内联函数可以一步完成，顶多需要一点代码调整。但如果遇到了复杂的情况，我会每次内联一行代码。哪怕只是处理一行代码，也可能遇到麻烦，那么我就会使用更精细的重构手法搬移语句到调用者（217），将步子再拆细一点。有时我会自信满满地快速完成重构，然后测试却失败了，这时我会回退到上一个能通过测试的版本，带着一点儿懊恼，以更小的步伐再次重构。
 
-  6.3　提炼变量（Extract Variable）
+##  6.3 提炼变量（Extract Variable）
 
   曾用名：引入解释性变量（Introduce Explaining Variable）
 
@@ -474,8 +468,8 @@ function gatherCustomerData(out, aCustomer) {
 
   
   return order.quantity * order.itemPrice -
-　Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
-　Math.min(order.quantity * order.itemPrice * 0.1, 100);
+ Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
+ Math.min(order.quantity * order.itemPrice * 0.1, 100);
 
   
   const basePrice = order.quantity * order.itemPrice;
@@ -511,103 +505,103 @@ return basePrice - quantityDiscount + shipping;
 
   我们从一个简单计算开始：
   function price(order) {
-　//price is base price - quantity discount + shipping
-　return order.quantity * order.itemPrice -
-　　Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
-　　Math.min(order.quantity * order.itemPrice * 0.1, 100);
+ //price is base price - quantity discount + shipping
+ return order.quantity * order.itemPrice -
+  Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
+  Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
 
   这段代码还算简单，不过我可以让它变得更容易理解。首先，我发现，底价（base price）等于数量（quantity）乘以单价（item price）。
   function price(order) {
-　//price is base price - quantity discount + shipping
-　return order.quantity * order.itemPrice -
-　　Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
-　　Math.min(order.quantity * order.itemPrice * 0.1, 100);
+ //price is base price - quantity discount + shipping
+ return order.quantity * order.itemPrice -
+  Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
+  Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
 
   我把这一新学到的知识放进代码里，创建一个变量，并给它起个合适的名字：
   function price(order) {
-　//price is base price - quantity discount + shipping
-　const basePrice = order.quantity * order.itemPrice;
-　return order.quantity * order.itemPrice -
-　　Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
-　　Math.min(order.quantity * order.itemPrice * 0.1, 100);
+ //price is base price - quantity discount + shipping
+ const basePrice = order.quantity * order.itemPrice;
+ return order.quantity * order.itemPrice -
+  Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
+  Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
 
   当然，仅仅声明并初始化一个变量没有任何作用，我还得使用它才行。所以，我用这个变量取代了原来的表达式：
   function price(order) {
-　//price is base price - quantity discount + shipping
-　const basePrice = order.quantity * order.itemPrice;
-　return basePrice -
-　　Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
-　　Math.min(order.quantity * order.itemPrice * 0.1, 100);
+ //price is base price - quantity discount + shipping
+ const basePrice = order.quantity * order.itemPrice;
+ return basePrice -
+  Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
+  Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
 
   稍后的代码还用到了同样的表达式，也可以用新建的变量取代之。
   function price(order) {
-　//price is base price - quantity discount + shipping
-　const basePrice = order.quantity * order.itemPrice;
-　return basePrice -
-　　Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
-　　Math.min(basePrice * 0.1, 100);
+ //price is base price - quantity discount + shipping
+ const basePrice = order.quantity * order.itemPrice;
+ return basePrice -
+  Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
+  Math.min(basePrice * 0.1, 100);
 }
 
   下一行是计算批发折扣（quantity discount）的逻辑，我也将它提炼出来：
   function price(order) {
-　//price is base price - quantity discount + shipping
-　const basePrice = order.quantity * order.itemPrice;
-　const quantityDiscount = Math.max(0, order.quantity - 500) * order.itemPrice * 0.05;
-　return basePrice -
-　　quantityDiscount +
-　　Math.min(basePrice * 0.1, 100);
+ //price is base price - quantity discount + shipping
+ const basePrice = order.quantity * order.itemPrice;
+ const quantityDiscount = Math.max(0, order.quantity - 500) * order.itemPrice * 0.05;
+ return basePrice -
+  quantityDiscount +
+  Math.min(basePrice * 0.1, 100);
 }
 
   最后，我再把运费（shipping）计算提炼出来。同时我还可以删掉代码中的注释，因为现在代码已经可以完美表达自己的意义了：
   function price(order) {
-　const basePrice = order.quantity * order.itemPrice;
-　const quantityDiscount = Math.max(0, order.quantity - 500) * order.itemPrice * 0.05;
-　const shipping = Math.min(basePrice * 0.1, 100);
-　return basePrice - quantityDiscount + shipping;
+ const basePrice = order.quantity * order.itemPrice;
+ const quantityDiscount = Math.max(0, order.quantity - 500) * order.itemPrice * 0.05;
+ const shipping = Math.min(basePrice * 0.1, 100);
+ return basePrice - quantityDiscount + shipping;
 }
 
   范例：在一个类中
 
   下面是同样的代码，但这次它位于一个类中：
   class Order {
-　constructor(aRecord) {
-　　this._data = aRecord;
-　}
+ constructor(aRecord) {
+  this._data = aRecord;
+ }
 
 
-　get quantity() {return this._data.quantity;}
-　get itemPrice() {return this._data.itemPrice;}
+ get quantity() {return this._data.quantity;}
+ get itemPrice() {return this._data.itemPrice;}
 
-　get price() {
-　　return this.quantity * this.itemPrice -
-　　　Math.max(0, this.quantity - 500) * this.itemPrice * 0.05 +
-　　　Math.min(this.quantity * this.itemPrice * 0.1, 100);
-　}
+ get price() {
+  return this.quantity * this.itemPrice -
+   Math.max(0, this.quantity - 500) * this.itemPrice * 0.05 +
+   Math.min(this.quantity * this.itemPrice * 0.1, 100);
+ }
 }
 
   我要提炼的还是同样的变量，但我意识到：这些变量名所代表的概念，适用于整个Order类，而不仅仅是“计算价格”的上下文。既然如此，我更愿意将它们提炼成方法，而不是变量。
   class Order {
-　constructor(aRecord) {
-　　this._data = aRecord;
-　}
-　get quantity() {return this._data.quantity;}
-　get itemPrice() {return this._data.itemPrice;}
+ constructor(aRecord) {
+  this._data = aRecord;
+ }
+ get quantity() {return this._data.quantity;}
+ get itemPrice() {return this._data.itemPrice;}
 
-　get price() {
-　　return this.basePrice - this.quantityDiscount + this.shipping;
-　}
-　get basePrice()        {return this.quantity * this.itemPrice;}
-　get quantityDiscount() {return Math.max(0, this.quantity - 500) * this.itemPrice * 0.05;}
-　get shipping()         {return Math.min(this.basePrice * 0.1, 100);}
+ get price() {
+  return this.basePrice - this.quantityDiscount + this.shipping;
+ }
+ get basePrice()        {return this.quantity * this.itemPrice;}
+ get quantityDiscount() {return Math.max(0, this.quantity - 500) * this.itemPrice * 0.05;}
+ get shipping()         {return Math.min(this.basePrice * 0.1, 100);}
 }
 
   这是对象带来的一大好处：它们提供了合适的上下文，方便分享相关的逻辑和数据。在如此简单的情况下，这方面的好处还不太明显；但在一个更大的类当中，如果能找出可以共用的行为，赋予它独立的概念抽象，给它起一个好名字，对于使用对象的人会很有帮助。
 
-  6.4　内联变量（Inline Variable）
+##  6.4 内联变量（Inline Variable）
 
   曾用名：内联临时变量（Inline Temp）
 
@@ -648,7 +642,7 @@ return (basePrice &gt; 1000);
     测试。
   
 
-  6.5　改变函数声明（Change Function Declaration）
+##  6.5 改变函数声明（Change Function Declaration）
 
   别名：函数改名（Rename Function）
 
@@ -869,7 +863,7 @@ function xxNEWinNewEngland(stateCode) {
 
   自动化重构工具减少了迁移式做法的用武之地，同时也使迁移式做法更加高效。自动化重构工具可以安全地处理相当复杂的改名、参数变更等情况，所以迁移式做法的用武之地就变少了，因为自动化重构工具经常能提供足够的支持。如果遇到类似这里的例子，尽管工具无法自动完成整个重构，还是可以更快、更安全地完成关键的提炼和内联步骤，从而简化整个重构过程。
 
-  6.6　封装变量（Encapsulate Variable）
+##  6.6 封装变量（Encapsulate Variable）
 
   曾用名：自封装字段（Self-Encapsulate Field）
 
@@ -984,13 +978,13 @@ export function defaultOwner()       {return new Person(defaultOwnerData);}
 export function setDefaultOwner(arg) {defaultOwnerData = arg;}
 
 class Person { 
-　constructor(data) {
-　　this._lastName = data.lastName; 
-　　this._firstName = data.firstName
-　}
-　get lastName() {return this._lastName;}
-　get firstName() {return this._firstName;}
-　// and so on for other properties
+ constructor(data) {
+  this._lastName = data.lastName; 
+  this._firstName = data.firstName
+ }
+ get lastName() {return this._lastName;}
+ get firstName() {return this._firstName;}
+ // and so on for other properties
 
   现在，如果客户端调用defaultOwner函数获得“默认拥有人”数据、再尝试对其属性（即lastName和firstName）重新赋值，赋值不会产生任何效果。对于侦测或阻止修改数据结构内部的数据项，各种编程语言有不同的方式，所以我会根据当下使用的语言来选择具体的办法。
 
@@ -1002,7 +996,7 @@ class Person {
 
   如你所见，数据封装很有价值，但往往并不简单。到底应该封装什么，以及如何封装，取决于数据被使用的方式，以及我想要修改数据的方式。不过，一言以蔽之，数据被使用得越广，就越是值得花精力给它一个体面的封装。
 
-  6.7　变量改名（Rename Variable）
+##  6.7 变量改名（Rename Variable）
 
   
   let a = height * width;
@@ -1054,8 +1048,8 @@ class Person {
 
 setTitle(obj['articleTitle']); 
 
-　function title()       {return tpHd;}
-　function setTitle(arg) {tpHd = arg;}
+ function title()       {return tpHd;}
+ function setTitle(arg) {tpHd = arg;}
 
   现在就可以给变量改名：
   let _title = "untitled";
@@ -1082,7 +1076,7 @@ const cpyNm = companyName;
 
   这个做法不仅适用于常量，也同样适用于客户端只能读取的变量（例如JavaScript模块中导出的变量）。
 
-  6.8　引入参数对象（Introduce Parameter Object）
+##  6.8 引入参数对象（Introduce Parameter Object）
 
   
   function amountInvoiced(startDate, endDate) {...} 
@@ -1128,93 +1122,93 @@ function amountOverdue(aDateRange) {...}
 
   下面要展示的代码会查看一组温度读数（reading），检查是否有任何一条读数超出了指定的运作温度范围（range）。温度读数的数据如下：
   const station = { name: "ZB1",
-　　　　　　　　　readings: [
-　　　　　　　　　　{temp: 47, time: "2016-11-10 09:10"},
-　　　　　　　　　　{temp: 53, time: "2016-11-10 09:20"},
-　　　　　　　　　　{temp: 58, time: "2016-11-10 09:30"},
-　　　　　　　　　　{temp: 53, time: "2016-11-10 09:40"},
-　　　　　　　　　　{temp: 51, time: "2016-11-10 09:50"},
-　　　　　　　　　]
-　　　　　　　　};
+         readings: [
+          {temp: 47, time: "2016-11-10 09:10"},
+          {temp: 53, time: "2016-11-10 09:20"},
+          {temp: 58, time: "2016-11-10 09:30"},
+          {temp: 53, time: "2016-11-10 09:40"},
+          {temp: 51, time: "2016-11-10 09:50"},
+         ]
+        };
 
   下面的函数负责找到超出指定范围的温度读数：
   function readingsOutsideRange(station, min, max) { 
-　return station.readings
-　　.filter(r =&gt; r.temp &lt; min || r.temp &gt; max);
+ return station.readings
+  .filter(r =&gt; r.temp &lt; min || r.temp &gt; max);
 }
 
   调用该函数的代码可能是下面这样的。
 
   调用方
   alerts = readingsOutsideRange(station,
-　　　　　　　　　　　　　　　operatingPlan.temperatureFloor, 
-　　　　　　　　　　　　　　　operatingPlan.temperatureCeiling);
+               operatingPlan.temperatureFloor, 
+               operatingPlan.temperatureCeiling);
 
   请注意，这里的调用代码从另一个对象中抽出两项数据，转手又把这一对数据传递给readingsOutsideRange。代表“运作计划”的operatingPlan对象用了另外的名字来表示温度范围的下限和上限，与readingsOutsideRange中所用的名字不同。像这样用两项各不相干的数据来表示一个范围的情况并不少见，最好是将其组合成一个对象。我会首先为要组合的数据声明一个类：
   class NumberRange { 
-　constructor(min, max) {
-　　this._data = {min: min, max: max};
-　}
-　get min() {return this._data.min;} 
-　get max() {return this._data.max;}
+ constructor(min, max) {
+  this._data = {min: min, max: max};
+ }
+ get min() {return this._data.min;} 
+ get max() {return this._data.max;}
 }
 
   我声明了一个类，而不是基本的JavaScript对象，因为这个重构通常只是一系列重构的起点，随后我会把行为搬移到新建的对象中。既然类更适合承载数据与行为的组合，我就直接从声明一个类开始。同时，在这个新类中，我不会提供任何更新数据的函数，因为我有可能将其处理成值对象（Value Object）[mf-vo]。在使用这个重构手法时，大多数情况下我都会创建值对象。
 
   然后我会运用改变函数声明（124），把新的对象作为参数传给readingsOutsideRange。
   function readingsOutsideRange(station, min, max, range) { 
-　return station.readings
-　　.filter(r =&gt; r.temp &lt; min || r.temp &gt; max);
+ return station.readings
+  .filter(r =&gt; r.temp &lt; min || r.temp &gt; max);
 }
 
   在JavaScript中，此时我不需要修改调用方代码，但在其他语言中，我必须在调用处为新参数传入null值，就像下面这样。
 
   调用方
   alerts = readingsOutsideRange(station,
-　　　　　　　　　　　　　　　operatingPlan.temperatureFloor, 
-　　　　　　　　　　　　　　　operatingPlan.temperatureCeiling, 
-　　　　　　　　　　　　　　　null);
+               operatingPlan.temperatureFloor, 
+               operatingPlan.temperatureCeiling, 
+               null);
 
   到目前为止，我还没有修改任何行为，所以测试应该仍然能通过。随后，我会挨个找到函数的调用处，传入合适的温度范围。
 
   调用方
   const range = new NumberRange(operatingPlan.temperatureFloor, operatingPlan.temperatureCeiling);
 alerts = readingsOutsideRange(station,
-　　　　　　　　　　　　　　　operatingPlan.temperatureFloor, 
-　　　　　　　　　　　　　　　operatingPlan.temperatureCeiling, 
-　　　　　　　　　　　　　　　range);
+               operatingPlan.temperatureFloor, 
+               operatingPlan.temperatureCeiling, 
+               range);
 
   此时我还是没有修改任何行为，因为新添的参数没有被使用。所有测试应该仍然能通过。
 
   现在我可以开始修改使用参数的代码了。先从“最大值”开始：
   function readingsOutsideRange(station, min, max, range) { 
-　return station.readings
-　　.filter(r =&gt; r.temp &lt; min || r.temp &gt; range.max);
+ return station.readings
+  .filter(r =&gt; r.temp &lt; min || r.temp &gt; range.max);
 }
 
   调用方
   const range = new NumberRange(operatingPlan.temperatureFloor, operatingPlan.temperatureCeiling); 
 alerts = readingsOutsideRange(station,
-　　　　　　　　　　　　　　　operatingPlan.temperatureFloor, 
-　　　　　　　　　　　　　　　operatingPlan.temperatureCeiling,
-　　　　　　　　　　　　　　　range);
+               operatingPlan.temperatureFloor, 
+               operatingPlan.temperatureCeiling,
+               range);
 
   此时要执行测试。如果测试通过，我再接着处理另一个参数。
   function readingsOutsideRange(station, min, range) { 
-　return station.readings
-　　.filter(r =&gt; r.temp &lt; range.min || r.temp &gt; range.max);
+ return station.readings
+  .filter(r =&gt; r.temp &lt; range.min || r.temp &gt; range.max);
 }
 
   调用方
   const range = new NumberRange(operatingPlan.temperatureFloor, operatingPlan.temperatureCeiling); 
 alerts = readingsOutsideRange(station,
-　　　　　　　　　　　　　　　operatingPlan.temperatureFloor,
-　　　　　　　　　　　　　　　range);
+               operatingPlan.temperatureFloor,
+               range);
 
   这项重构手法到这儿就完成了。不过，将一堆参数替换成一个真正的对象，这只是长征第一步。创建一个类是为了把行为搬移进去。在这里，我可以给“范围”类添加一个函数，用于测试一个值是否落在范围之内。
   function readingsOutsideRange(station, range) { 
-　return station.readings
-　　.f ilter(r =&gt; !range.contains(r.temp));
+ return station.readings
+  .f ilter(r =&gt; !range.contains(r.temp));
 }
 
   class NumberRange...
@@ -1222,7 +1216,7 @@ alerts = readingsOutsideRange(station,
 
   这样我就迈出了第一步，开始逐渐打造一个真正有用的“范围”[mf-range]类。一旦识别出“范围”这个概念，那么每当我在代码中发现“最大/最小值”这样一对数字时，我就会考虑是否可以将其改为使用“范围”类。（例如，我马上就会考虑把“运作计划”类中的temperatureFloor和temperatureCeiling替换为temperatureRange。）在观察这些成对出现的数字如何被使用时，我会发现一些有用的行为，并将其搬移到“范围”类中，简化其使用方法。比如，我可能会先给这个类加上“基于数值判断相等性”的函数，使其成为一个真正的值对象。
 
-  6.9　函数组合成类（Combine Functions into Class）
+##  6.9 函数组合成类（Combine Functions into Class）
 
   
   function base(aReading) {...}
@@ -1304,16 +1298,16 @@ function calculateBaseCharge(aReading) {
 
   我可以运用封装记录（162）将记录变成类。
   class Reading {
-　constructor(data) {
-　　this._customer = data.customer;
-　　this._quantity = data.quantity;
-　　this._month = data.month;
-　　this._year = data.year;
-　}
-　get customer() {return this._customer;}
-　get quantity() {return this._quantity;}
-　get month()    {return this._month;}
-　get year()     {return this._year;}
+ constructor(data) {
+  this._customer = data.customer;
+  this._quantity = data.quantity;
+  this._month = data.month;
+  this._year = data.year;
+ }
+ get customer() {return this._customer;}
+ get quantity() {return this._quantity;}
+ get month()    {return this._month;}
+ get year()     {return this._year;}
 }
 
   首先，我想把手上已有的函数calculateBaseCharge搬到新建的Reading类中。一得到原始的读数数据，我就用Reading类将它包装起来，然后就可以在函数中使用Reading类了。
@@ -1385,7 +1379,7 @@ const taxableCharge = aReading.taxableCharge;
 
   由于所有派生数据都是在使用时计算得出的，所以对存储下来的读数进行修改也没问题。一般而论，我更倾向于使用不可变的数据；但很多时候我们必须得使用可变数据（比如JavaScript整个语言生态在设计时就没有考虑数据的不可变性）。如果数据确有可能被更新，那么用类将其封装起来会很有帮助。
 
-  6.10　函数组合成变换（Combine Functions into Transform）
+##  6.10 函数组合成变换（Combine Functions into Transform）
 
   
   function base(aReading) {...}
@@ -1549,7 +1543,7 @@ const taxableCharge = aReading.taxableCharge;
 
   增强后的读数记录有一个大问题：如果某个客户端修改了一项数据的值，会发生什么？比如说，如果某处代码修改了quantity字段的值，就会导致数据不一致。在JavaScript中，避免这种情况最好的办法是不要使用本重构手法，改用函数组合成类（144）。如果编程语言支持不可变的数据结构，那么就没有这个问题了，那样的语言中会更常用到变换。但即便编程语言不支持数据结构不可变，如果数据是在只读的上下文中被使用（例如在网页上显示派生数据），还是可以使用变换。
 
-  6.11　拆分阶段（Split Phase）
+##  6.11 拆分阶段（Split Phase）
 
   
   const orderData = orderString.split(/\s+/);
@@ -1561,14 +1555,14 @@ const orderPrice = parseInt(orderData[1]) * productPrice;
 const orderPrice = price(orderRecord, priceList);
 
 function parseOrder(aString) {
-　const values = aString.split(/\s+/); 
-　return ({
-　　productID: values[0].split("-")[1], 
-　　quantity: parseInt(values[1]),
-　});
+ const values = aString.split(/\s+/); 
+ return ({
+  productID: values[0].split("-")[1], 
+  quantity: parseInt(values[1]),
+ });
 }
 function price(order, priceList) {
-　return order.quantity * priceList[order.productID];
+ return order.quantity * priceList[order.productID];
 }
 
   动机
@@ -1611,145 +1605,145 @@ function price(order, priceList) {
 
   我手上有一段“计算订单价格”的代码，至于订单中的商品是什么，我们从代码中看不出来，也不太关心。
   function priceOrder(product, quantity, shippingMethod) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　const shippingPerCase = (basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = quantity * shippingPerCase;
-　const price = basePrice - discount + shippingCost; 
-　return price;
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ const shippingPerCase = (basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = quantity * shippingPerCase;
+ const price = basePrice - discount + shippingCost; 
+ return price;
 }
 
   虽然只是个常见的、过于简单的范例，从中还是能看出有两个不同阶段存在的。前两行代码根据商品（product）信息计算订单中与商品相关的价格，随后的两行则根据配送（shipping）信息计算配送成本。后续的修改可能还会使价格和配送的计算逻辑变复杂，但只要这两块逻辑相对独立，将这段代码拆分成两个阶段就是有价值的。
 
   我首先用提炼函数（106）把计算配送成本的逻辑提炼出来。
   function priceOrder(product, quantity, shippingMethod) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　const price = applyShipping(basePrice, shippingMethod, quantity, discount);
-　return price;
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ const price = applyShipping(basePrice, shippingMethod, quantity, discount);
+ return price;
 }
 function applyShipping(basePrice, shippingMethod, quantity, discount) {
-　const shippingPerCase = (basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = quantity * shippingPerCase;
-　const price = basePrice - discount + shippingCost; 
-　return price;
+ const shippingPerCase = (basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = quantity * shippingPerCase;
+ const price = basePrice - discount + shippingCost; 
+ return price;
 }
 
   第二阶段需要的数据都以参数形式传入。在真实环境下，参数的数量可能会很多，但我对此并不担心，因为很快就会将这些参数消除掉。
 
   随后我会引入一个中转数据结构，使其在两阶段之间沟通信息。
   function priceOrder(product, quantity, shippingMethod) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　const priceData = {};
-　const price = applyShipping(priceData, basePrice, shippingMethod, quantity, discount); 
-　return price;
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ const priceData = {};
+ const price = applyShipping(priceData, basePrice, shippingMethod, quantity, discount); 
+ return price;
 }
 
 function applyShipping(priceData, basePrice, shippingMethod, quantity, discount) { 
-　const shippingPerCase = (basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = quantity * shippingPerCase;
-　const price = basePrice - discount + shippingCost; 
-　return price;
+ const shippingPerCase = (basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = quantity * shippingPerCase;
+ const price = basePrice - discount + shippingCost; 
+ return price;
 }
 
   现在我会审视applyShipping的各个参数。第一个参数basePrice是在第一阶段代码中创建的，因此我将其移入中转数据结构，并将其从参数列表中去掉。
   function priceOrder(product, quantity, shippingMethod) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate; 
-　const priceData = {basePrice: basePrice};
-　const price = applyShipping(priceData, basePrice, shippingMethod, quantity, discount); 
-　return price;
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate; 
+ const priceData = {basePrice: basePrice};
+ const price = applyShipping(priceData, basePrice, shippingMethod, quantity, discount); 
+ return price;
 }
 function applyShipping(priceData, basePrice, shippingMethod, quantity, discount) { 
-　const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = quantity * shippingPerCase;
-　const price = priceData.basePrice - discount + shippingCost; 
-　return price;
+ const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = quantity * shippingPerCase;
+ const price = priceData.basePrice - discount + shippingCost; 
+ return price;
 }
 
   下一个参数是shippingMethod。第一阶段中没有使用这项数据，所以它可以保留原样。
 
   再下一个参数是quantity。这个参数在第一阶段中用到，但不是在那里创建的，所以其实可以将其留在参数列表中。但我更倾向于把尽可能多的参数搬移到中转数据结构中。
   function priceOrder(product, quantity, shippingMethod) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　const priceData = {basePrice: basePrice, quantity: quantity};
-　const price = applyShipping(priceData, shippingMethod, quantity, discount); 
-　return price;
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ const priceData = {basePrice: basePrice, quantity: quantity};
+ const price = applyShipping(priceData, shippingMethod, quantity, discount); 
+ return price;
 }
 function applyShipping(priceData, shippingMethod, quantity, discount) {
-　const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = priceData.quantity * shippingPerCase;
-　const price = priceData.basePrice - discount + shippingCost; 
-　return price;
+ const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = priceData.quantity * shippingPerCase;
+ const price = priceData.basePrice - discount + shippingCost; 
+ return price;
 }
 
   对discount参数我也如法炮制。
   function priceOrder(product, quantity, shippingMethod) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　const priceData = {basePrice: basePrice, quantity: quantity, discount:discount}; 
-　const price = applyShipping(priceData, shippingMethod, discount);
-　return price;
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ const priceData = {basePrice: basePrice, quantity: quantity, discount:discount}; 
+ const price = applyShipping(priceData, shippingMethod, discount);
+ return price;
 }
 function applyShipping(priceData, shippingMethod, discount) {
-　const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = priceData.quantity * shippingPerCase;
-　const price = priceData.basePrice - priceData.discount + shippingCost; 
-　return price;
+ const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = priceData.quantity * shippingPerCase;
+ const price = priceData.basePrice - priceData.discount + shippingCost; 
+ return price;
 }
 
   处理完参数列表后，中转数据结构得到了完整的填充，现在我可以把第一阶段代码提炼成独立的函数，令其返回这份数据。
   function priceOrder(product, quantity, shippingMethod) { 
-　const priceData = calculatePricingData(product, quantity); 
-　const price = applyShipping(priceData, shippingMethod); 
-　return price;
+ const priceData = calculatePricingData(product, quantity); 
+ const price = applyShipping(priceData, shippingMethod); 
+ return price;
 }
 function calculatePricingData(product, quantity) {
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　return {basePrice: basePrice, quantity: quantity, discount:discount};
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ return {basePrice: basePrice, quantity: quantity, discount:discount};
 }
 function applyShipping(priceData, shippingMethod) {
-　const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = priceData.quantity * shippingPerCase;
-　const price = priceData.basePrice - priceData.discount + shippingCost; 
-　return price;
+ const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = priceData.quantity * shippingPerCase;
+ const price = priceData.basePrice - priceData.discount + shippingCost; 
+ return price;
 }
 
   两个函数中，最后一个const变量都是多余的，我忍不住洁癖，将它们内联消除掉。
   function priceOrder(product, quantity, shippingMethod) { 
-　const priceData = calculatePricingData(product, quantity); 
-　return applyShipping(priceData, shippingMethod);
+ const priceData = calculatePricingData(product, quantity); 
+ return applyShipping(priceData, shippingMethod);
 }
 
 
 function calculatePricingData(product, quantity) { 
-　const basePrice = product.basePrice * quantity;
-　const discount = Math.max(quantity - product.discountThreshold, 0)
-　　　　　* product.basePrice * product.discountRate;
-　return {basePrice: basePrice, quantity: quantity, discount:discount};
+ const basePrice = product.basePrice * quantity;
+ const discount = Math.max(quantity - product.discountThreshold, 0)
+     * product.basePrice * product.discountRate;
+ return {basePrice: basePrice, quantity: quantity, discount:discount};
 }
 function applyShipping(priceData, shippingMethod) {
-　const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
-　　　　　? shippingMethod.discountedFee : shippingMethod.feePerCase; 
-　const shippingCost = priceData.quantity * shippingPerCase;
-　return priceData.basePrice - priceData.discount + shippingCost;
+ const shippingPerCase = (priceData.basePrice &gt; shippingMethod.discountThreshold)
+     ? shippingMethod.discountedFee : shippingMethod.feePerCase; 
+ const shippingCost = priceData.quantity * shippingPerCase;
+ return priceData.basePrice - priceData.discount + shippingCost;
 }
 
   
