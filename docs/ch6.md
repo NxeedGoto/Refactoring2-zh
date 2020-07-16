@@ -14,7 +14,7 @@
 
   反向重构：内联函数（115）
 
-  
+```js
   function printOwing(invoice) {
  printBanner();
  let outstanding = calculateOutstanding();
@@ -35,7 +35,7 @@
   console.log(`amount: ${outstanding}`);
  }
 }
-
+```
   动机
 
   提炼函数是我最常用的重构之一。（在这儿我用了“函数/function”这个词，但换成面向对象语言中的“方法/method”，或者其他任何形式的“过程/procedure”或者“子程序/subroutine”，也同样适用。）我会浏览一段代码，理解其作用，然后将其提炼到一个独立的函数中，并以这段代码的用途为这个函数命名。
@@ -103,6 +103,7 @@
   范例：无局部变量
 
   在最简单的情况下，提炼函数易如反掌。请看下列函数：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -124,10 +125,11 @@
  console.log(`amount: ${outstanding}`);
  console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
-
+```
   你可能会好奇Clock.today是干什么的。这是一个Clock Wrapper[mf-cw]，也就是封装系统时钟调用的对象。我尽量避免在代码中直接调用Date.now()这样的函数，因为这会导致测试行为不可预测，以及在诊断故障时难以复制出错时的情况。
 
   我们可以轻松提炼出“打印横幅”的代码。我只需要剪切、粘贴再插入一个函数调用动作就行了：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -152,8 +154,9 @@ function printBanner() {
  console.log("**** Customer Owes ****");
  console.log("***********************");
 }
-
+```
   同样，我还可以把“打印详细信息”部分也提炼出来：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -175,7 +178,7 @@ function printBanner() {
   console.log(`amount: ${outstanding}`);
   console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
-
+```
   看起来提炼函数是一个极其简单的重构。但很多时候，情况会变得比较复杂。
 
   在上面的例子中，我把printDetails函数嵌套在printOwing函数内部，这样前者就能访问到printOwing内部定义的所有变量。如果我使用的编程语言不支持嵌套函数，就没法这样操作了，那么我就要面对“提炼出一个顶层函数”的问题。此时我必须细心处理“只存在于源函数作用域”的变量，包括源函数的参数以及源函数内部定义的临时变量。
@@ -183,6 +186,7 @@ function printBanner() {
   范例：有局部变量
 
   局部变量最简单的情况是：被提炼代码段只是读取这些变量的值，并不修改它们。这种情况下我可以简单地将它们当作参数传给目标函数。所以，如果我面对下列函数：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -201,8 +205,9 @@ function printBanner() {
  console.log(`name: ${invoice.customer}`);
  console.log(`amount: ${outstanding}`);
  console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
-
+```
   就可以将“打印详细信息”这一部分提炼为带两个参数的函数：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -224,8 +229,9 @@ function printDetails(invoice, outstanding) {
  console.log(`amount: ${outstanding}`);
  console.log(`due: ${invoice.dueDate.toLocaleDateString()}`);
 }
-
+```
   如果局部变量是一个数据结构（例如数组、记录或者对象），而被提炼代码段又修改了这个结构中的数据，也可以如法炮制。所以，“设置到期日”的逻辑也可以用同样的方式提炼出来：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -243,14 +249,15 @@ function recordDueDate(invoice) {
  const today = Clock.today;
  invoice.dueDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
 }
-
+```
   范例：对局部变量再赋值
 
   如果被提炼代码段对局部变量赋值，问题就变得复杂了。这里我们只讨论临时变量的问题。如果你发现源函数的参数被赋值，应该马上使用拆分变量（240）将其变成临时变量。
 
   被赋值的临时变量也分两种情况。较简单的情况是：这个变量只在被提炼代码段中使用。若果真如此，你可以将这个临时变量的声明移到被提炼代码段中，然后一起提炼出去。如果变量的初始化和使用离得有点儿远，可以用移动语句（223）把针对这个变量的操作放到一起。
 
-  比较糟糕的情况是：被提炼代码段之外的代码也使用了这个变量。此时我需要返回修改后的值。我会用下面这个已经很眼熟的函数来展示该怎么做：
+比较糟糕的情况是：被提炼代码段之外的代码也使用了这个变量。此时我需要返回修改后的值。我会用下面这个已经很眼熟的函数来展示该怎么做：
+```js
   function printOwing(invoice) {
  let outstanding = 0;
 
@@ -264,10 +271,11 @@ function recordDueDate(invoice) {
  recordDueDate(invoice);
  printDetails(invoice, outstanding);
 }
-
+```
   前面的重构我都一步到位地展示了结果，因为它们都很简单。但这次我会一步一步展示“做法”里的每个步骤。
 
   首先，把变量声明移动到使用处之前。
+```js
   function printOwing(invoice) {
  printBanner();
 
@@ -280,8 +288,9 @@ function recordDueDate(invoice) {
  recordDueDate(invoice);
  printDetails(invoice, outstanding);
 }
-
+```
   然后把想要提炼的代码复制到目标函数中。
+```js
   function printOwing(invoice) {
  printBanner();
 
@@ -301,10 +310,11 @@ function calculateOutstanding(invoice) {
  }
  return outstanding;
 }
-
+```
   由于outstanding变量的声明已经被搬移到提炼出的新函数中，就不需要再将其作为参数传入了。outstanding是提炼代码段中唯一被重新赋值的变量，所以我可以直接返回它。
 
   我的JavaScript环境在编译期提供不了任何价值——简直还不如文本编辑器的语法分析有用，所以“做法”里的“编译”一步可以跳过了。下一件事是修改原来的代码，令其调用新函数。新函数返回了修改后的outstanding变量值，我需要将其存入原来的变量中。
+```js
   function printOwing(invoice) {
  printBanner();
  let outstanding = calculateOutstanding(invoice);
@@ -318,8 +328,9 @@ function calculateOutstanding(invoice) {
  }
  return outstanding;
 }
-
+```
   在收工之前，我还要修改返回值的名字，使其符合我一贯的编码风格。
+```js
   function printOwing(invoice) {
  printBanner();
  const outstanding = calculateOutstanding(invoice);
@@ -333,7 +344,7 @@ function calculateOutstanding(invoice) {
  }
  return result;
 }
-
+```
   我还顺手把原来的outstanding变量声明成const的，令其在初始化之后不能再次被赋值。
 
   这时候，你可能会问：“如果需要返回的变量不止一个，又该怎么办呢？”
@@ -348,7 +359,7 @@ function calculateOutstanding(invoice) {
 
   反向重构：提炼函数（106）
 
-  
+```js
   function getRating(driver) {
  return moreThanFiveLateDeliveries(driver) ? 2 : 1;
 }
@@ -361,7 +372,7 @@ function moreThanFiveLateDeliveries(driver) {
   function getRating(driver) {
  return (driver.numberOfLateDeliveries &gt; 5) ? 2 : 1;
 }
-
+```
   动机
 
   本书经常以简短的函数表现动作意图，这样会使代码更清晰易读。但有时候你会遇到某些函数，其内部代码和函数名称同样清晰易读。也可能你重构了该函数的内部实现，使其内容和其名称变得同样清晰。若果真如此，你就应该去掉这个函数，直接使用其中的代码。间接性可能带来帮助，但非必要的间接性总是让人不舒服。
@@ -401,19 +412,22 @@ function moreThanFiveLateDeliveries(driver) {
   范例
 
   在最简单的情况下，这个重构简单得不值一提。一开始的代码是这样：
+```js
   function rating(aDriver) {
  return moreThanFiveLateDeliveries(aDriver) ? 2 : 1;
 }
 function moreThanFiveLateDeliveries(aDriver) { 
  return aDriver.numberOfLateDeliveries &gt; 5;
 }
-
+```
   我只要把被调用的函数的return语句复制出来，粘贴到调用处，取代原本的函数调用，就行了。
+```js
   function rating(aDriver) {
   return aDriver.numberOfLateDeliveries &amp;gt; 5 ? 2 : 1;
 }
-
+```
   不过实际情况可能不会这么简单，需要我多做一点儿工作，帮助代码融入它的新家。例如，开始时的代码与前面稍有不同：
+```js
   function rating(aDriver) {
  return moreThanFiveLateDeliveries(aDriver) ? 2 : 1;
 }
@@ -421,13 +435,15 @@ function moreThanFiveLateDeliveries(aDriver) {
 function moreThanFiveLateDeliveries(dvr) {
  return dvr.numberOfLateDeliveries &gt; 5;
 }
-
+```
   几乎是一样的代码，但moreThanFiveLateDeliveries函数声明的形式参数名与调用处使用的变量名不同，所以我在内联时需要对代码做些微调。
+```js
   function rating(aDriver) {
   return aDriver.numberOfLateDeliveries &gt; 5 ? 2 : 1;
 }
-
+```
   情况还可能更复杂。例如，请看下列代码：
+```js
   function reportLines(aCustomer) {
  const lines = [];
  gatherCustomerData(lines, aCustomer);
@@ -437,8 +453,9 @@ function gatherCustomerData(out, aCustomer) {
  out.push(["name", aCustomer.name]);
  out.push(["location", aCustomer.location]);
 }
-
+```
   我要把gatherCustomerData内联到reportLines中，这时简单的剪切和粘贴就不够了。这段代码还不算很麻烦，大多数时候我还是一步到位地完成了重构，只是需要做些调整。如果想更谨慎些，也可以每次搬移一行代码：可以首先对第一行代码使用搬移语句到调用者（217）——我还是用简单的“剪切-粘贴-调整”方式进行。
+```js
   function reportLines(aCustomer) {
  const lines = [];
  lines.push(["name", aCustomer.name]);
@@ -449,15 +466,16 @@ function gatherCustomerData(out, aCustomer) {
  out.push(["name", aCustomer.name]); 
  out.push(["location", aCustomer.location]);
 }
-
+```
   然后继续处理后面的代码行，直到完成整个重构。
+```js
   function reportLines(aCustomer) {
  const lines = [];
  lines.push(["name", aCustomer.name]);
  lines.push(["location", aCustomer.location]);
  return lines;
 }
-
+```
   重点在于始终小步前进。大多数时候，由于我平时写的函数都很小，内联函数可以一步完成，顶多需要一点代码调整。但如果遇到了复杂的情况，我会每次内联一行代码。哪怕只是处理一行代码，也可能遇到麻烦，那么我就会使用更精细的重构手法搬移语句到调用者（217），将步子再拆细一点。有时我会自信满满地快速完成重构，然后测试却失败了，这时我会回退到上一个能通过测试的版本，带着一点儿懊恼，以更小的步伐再次重构。
 
 ##  6.3 提炼变量（Extract Variable）
@@ -466,7 +484,7 @@ function gatherCustomerData(out, aCustomer) {
 
   反向重构：内联变量（123）
 
-  
+```js
   return order.quantity * order.itemPrice -
  Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
  Math.min(order.quantity * order.itemPrice * 0.1, 100);
@@ -476,7 +494,7 @@ function gatherCustomerData(out, aCustomer) {
 const quantityDiscount = Math.max(0, order.quantity - 500) * order.itemPrice * 0.05;
 const shipping = Math.min(basePrice * 0.1, 100);
 return basePrice - quantityDiscount + shipping;
-
+```
   动机
 
   表达式有可能非常复杂而难以阅读。这种情况下，局部变量可以帮助我们将表达式分解为比较容易管理的形式。在面对一块复杂逻辑时，局部变量使我能给其中的一部分命名，这样我就能更好地理解这部分逻辑是要干什么。
@@ -504,22 +522,25 @@ return basePrice - quantityDiscount + shipping;
   范例
 
   我们从一个简单计算开始：
+```js
   function price(order) {
  //price is base price - quantity discount + shipping
  return order.quantity * order.itemPrice -
   Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
   Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
-
+```
   这段代码还算简单，不过我可以让它变得更容易理解。首先，我发现，底价（base price）等于数量（quantity）乘以单价（item price）。
+```js
   function price(order) {
  //price is base price - quantity discount + shipping
  return order.quantity * order.itemPrice -
   Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
   Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
-
+```
   我把这一新学到的知识放进代码里，创建一个变量，并给它起个合适的名字：
+```js
   function price(order) {
  //price is base price - quantity discount + shipping
  const basePrice = order.quantity * order.itemPrice;
@@ -527,8 +548,10 @@ return basePrice - quantityDiscount + shipping;
   Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
   Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
+```
 
   当然，仅仅声明并初始化一个变量没有任何作用，我还得使用它才行。所以，我用这个变量取代了原来的表达式：
+```js
   function price(order) {
  //price is base price - quantity discount + shipping
  const basePrice = order.quantity * order.itemPrice;
@@ -536,8 +559,9 @@ return basePrice - quantityDiscount + shipping;
   Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
   Math.min(order.quantity * order.itemPrice * 0.1, 100);
 }
-
+```
   稍后的代码还用到了同样的表达式，也可以用新建的变量取代之。
+```js
   function price(order) {
  //price is base price - quantity discount + shipping
  const basePrice = order.quantity * order.itemPrice;
@@ -545,8 +569,9 @@ return basePrice - quantityDiscount + shipping;
   Math.max(0, order.quantity - 500) * order.itemPrice * 0.05 +
   Math.min(basePrice * 0.1, 100);
 }
-
+```
   下一行是计算批发折扣（quantity discount）的逻辑，我也将它提炼出来：
+```js
   function price(order) {
  //price is base price - quantity discount + shipping
  const basePrice = order.quantity * order.itemPrice;
@@ -555,18 +580,20 @@ return basePrice - quantityDiscount + shipping;
   quantityDiscount +
   Math.min(basePrice * 0.1, 100);
 }
-
+```
   最后，我再把运费（shipping）计算提炼出来。同时我还可以删掉代码中的注释，因为现在代码已经可以完美表达自己的意义了：
+```js
   function price(order) {
  const basePrice = order.quantity * order.itemPrice;
  const quantityDiscount = Math.max(0, order.quantity - 500) * order.itemPrice * 0.05;
  const shipping = Math.min(basePrice * 0.1, 100);
  return basePrice - quantityDiscount + shipping;
 }
-
+```
   范例：在一个类中
 
   下面是同样的代码，但这次它位于一个类中：
+  ```js
   class Order {
  constructor(aRecord) {
   this._data = aRecord;
@@ -582,8 +609,9 @@ return basePrice - quantityDiscount + shipping;
    Math.min(this.quantity * this.itemPrice * 0.1, 100);
  }
 }
-
+```
   我要提炼的还是同样的变量，但我意识到：这些变量名所代表的概念，适用于整个Order类，而不仅仅是“计算价格”的上下文。既然如此，我更愿意将它们提炼成方法，而不是变量。
+```js
   class Order {
  constructor(aRecord) {
   this._data = aRecord;
@@ -598,7 +626,7 @@ return basePrice - quantityDiscount + shipping;
  get quantityDiscount() {return Math.max(0, this.quantity - 500) * this.itemPrice * 0.05;}
  get shipping()         {return Math.min(this.basePrice * 0.1, 100);}
 }
-
+```
   这是对象带来的一大好处：它们提供了合适的上下文，方便分享相关的逻辑和数据。在如此简单的情况下，这方面的好处还不太明显；但在一个更大的类当中，如果能找出可以共用的行为，赋予它独立的概念抽象，给它起一个好名字，对于使用对象的人会很有帮助。
 
 ##  6.4 内联变量（Inline Variable）
@@ -607,13 +635,13 @@ return basePrice - quantityDiscount + shipping;
 
   反向重构：提炼变量（119）
 
-  
+```js
   let basePrice = anOrder.basePrice;
 return (basePrice &gt; 1000);
 
   
   return anOrder.basePrice &gt; 1000;
-
+```
   动机
 
   在一个函数内部，变量能给表达式提供有意义的名字，因此通常变量是好东西。但有时候，这个名字并不比表达式本身更具表现力。还有些时候，变量可能会妨碍重构附近的代码。若果真如此，就应该通过内联的手法消除变量。
@@ -654,12 +682,12 @@ return (basePrice &gt; 1000);
 
   别名：修改签名（Change Signature）
 
-  
+```js
   function circum(radius) {...}
 
   
   function circumference(radius) {...}
-
+```
   动机
 
   函数是我们将程序拆分成小块的主要方式。函数声明则展现了如何将这些小块组合在一起工作——可以说，它们就是软件系统的关节。和任何构造体一样，系统的好坏很大程度上取决于关节。好的关节使得给系统添加新部件很容易；而糟糕的关节则不断招致麻烦，让我们难以看清软件的行为，当需求变化时难以找到合适的地方进行修改。还好，软件是软的，我可以改变这些关节，只是要小心修改。
@@ -725,15 +753,17 @@ return (basePrice &gt; 1000);
   范例：函数改名（简单做法）
 
   下列函数的名字太过简略了：
+```js
   function circum(radius) {
   return 2 * Math.PI * radius;
 }
-
+```
   我想把它改得更有意义一点儿。首先修改函数的声明：
+```js
   function circumference(radius) {
   return 2 * Math.PI * radius;
 }
-
+```
   然后找出所有调用circum函数的地方，将其改为circumference。
 
   在不同的编程语言环境中，“找到所有调用旧函数的地方”这件事的难度也各异。静态类型加上趁手的IDE能提供最好的体验，通常可以全自动地完成函数改名，出错的概率极低。如果没有静态类型，就需要多花些工夫：即便再好的搜索工具，也可能会找出很多同名但并非同一函数的地方。
@@ -745,18 +775,20 @@ return (basePrice &gt; 1000);
   范例：函数改名（迁移式做法）
 
   还是这个名字太过简略的函数：
+```js
   function circum(radius) {
   return 2 * Math.PI * radius;
 }
-
+```
   按照迁移式做法，我首先要对整个函数体使用提炼函数（106）：
+```js
   function circum(radius) {
   return circumference(radius);
 }
 function circumference(radius) {
   return 2 * Math.PI * radius;
 }
-
+```
   此时我要执行测试，然后对旧函数使用内联函数（115）：找出所有调用旧函数的地方，将其改为调用新函数。每次修改之后都可以执行测试，这样我就可以小步前进，每次修改一处调用者。所有调用者都修改完之后，我就可以删除旧函数。
 
   大多数重构手法只用于修改我有权修改的代码，但这个重构手法同样适用于已发布API——使用这些API的代码我无权修改。以上面的代码为例，创建出circumference函数之后，我就可以暂停重构，并（如果可以的话）将circum函数标记为deprecated。然后我就耐心等待客户端改用circumference函数，等他们都改完了，我再删除circum函数。即便永远也抵达不了“删除circum函数”这个快乐的终点，至少新代码有了一个更好的名字。
@@ -766,25 +798,28 @@ function circumference(radius) {
   想象一个管理图书馆的软件，其中有代表“图书”的Book类，它可以接受顾客（customer）的预订（reservation）：
 
   class Book...
+```js
   addReservation(customer) {
   this._reservations.push(customer);
 }
-
+```
   现在我需要支持“高优先级预订”，因此我要给addReservation额外添加一个参数，用于标记这次预订应该进入普通队列还是优先队列。如果能很容易地找到并修改所有调用方，我可以直接修改；但如果不行，我仍然可以采用迁移式做法，下面是详细的过程。
 
   首先，我用提炼函数（106）把addReservation的函数体提炼出来，放进一个新函数。这个新函数最终会叫addReservation，但新旧两个函数不能同时占用这个名字，所以我会先给新函数起一个容易搜索的临时名字。
 
   class Book...
+```js
   addReservation(customer) {
   this.zz_addReservation(customer);
 }
 zz_addReservation(customer) { 
   this._reservations.push(customer);
 }
-
+```
   然后我会在新函数的声明中增加参数，同时修改旧函数中调用新函数的地方（也就是采用简单做法完成这一步）。
 
   class Book...
+```js
   addReservation(customer) {
   this.zz_addReservation(customer, false);
 }
@@ -792,15 +827,16 @@ zz_addReservation(customer) {
 zz_addReservation(customer, isPriority) {
   this._reservations.push(customer);
 }
-
+```
   在修改调用方之前，我喜欢利用JavaScript的语言特性先应用引入断言（302），确保调用方一定会用到这个新参数。
 
   class Book...
+```js
   zz_addReservation(customer, isPriority) {
   assert(isPriority === true || isPriority === false);
   this._reservations.push(customer);
 }
-
+```
   现在，如果我在修改调用方时出了错，没有提供新参数，这个断言会帮我抓到错误——以我过去的经验来看，比我更容易出错的程序员怕是不多。
 
   现在，我可以对源函数使用内联函数（115），使其调用者转而使用新函数。这样我可以每次只修改一个调用者。
@@ -812,24 +848,28 @@ zz_addReservation(customer, isPriority) {
   此前的范例都很简单：改个名，增加一个参数。有了迁移式做法以后，这个重构手法可以相当利落地处理更复杂的情况。下面就是一个更复杂的例子。
 
   假设我有一个函数，用于判断顾客（customer）是不是来自新英格兰（New England）地区：
+```js
   function inNewEngland(aCustomer) {
   return ["MA", "CT", "ME", "VT", "NH", "RI"].includes(aCustomer.address.state);
 }
-
+```
   下面是一个调用该函数的地方：
 
   调用方...
+```js
   const newEnglanders = someCustomers.filter(c =&gt; inNewEngland(c));
-
+```
   inNewEngland函数只用到了顾客所在的州（state）这项信息，基于这个信息来判断顾客是否来自新英格兰地区。我希望重构这个函数，使其接受州代码（state code）作为参数，这样就能去掉对“顾客”概念的依赖，使这个函数能在更多的上下文中使用。
 
   在使用改变函数声明时，我通常会先运用提炼函数（106），但在这里我会先对函数体做一点重构，使后面的重构步骤更简单。我先用提炼变量（119）提炼出我想要的新参数：
+```js
   function inNewEngland(aCustomer) {
   const stateCode = aCustomer.address.state;
   return ["MA", "CT", "ME", "VT", "NH", "RI"].includes(stateCode);
 }
-
+```
   然后再用提炼函数（106）创建新函数：
+```js
   function inNewEngland(aCustomer) {
   const stateCode = aCustomer.address.state;
   return xxNEWinNewEngland(stateCode);
@@ -838,29 +878,33 @@ zz_addReservation(customer, isPriority) {
 function xxNEWinNewEngland(stateCode) {
   return ["MA", "CT", "ME", "VT", "NH", "RI"].includes(stateCode);
 }
-
+```
   我会给新函数起一个好记又独特的临时名字，这样回头要改回原来的名字时也会简单一些。（你也看到，对于怎么起这些临时名字，我并没有统一的标准。）
 
   我会在源函数中使用内联变量（123），把刚才提炼出来的参数内联回去：
+```js
   function inNewEngland(aCustomer) {
   return xxNEWinNewEngland(aCustomer.address.state);
 }
-
+```
   然后我会用内联函数（115）把旧函数内联到调用处，其效果就是把旧函数的调用处改为调用新函数。我可以每次修改一个调用处。
 
   调用方...
+```js
   const newEnglanders = someCustomers.filter(c =&gt; xxNEWinNewEngland(c.address.state));
-
+```
   旧函数被内联到各调用处之后，我就再次使用改变函数声明，把新函数改回旧名字：
 
   调用方...
+```js
   const newEnglanders = someCustomers.filter(c =&gt; inNewEngland(c.address.state));
-
+```
   顶层作用域...
+```js
   function inNewEngland(stateCode) {
   return ["MA", "CT", "ME", "VT", "NH", "RI"].includes(stateCode);
 }
-
+```
   自动化重构工具减少了迁移式做法的用武之地，同时也使迁移式做法更加高效。自动化重构工具可以安全地处理相当复杂的改名、参数变更等情况，所以迁移式做法的用武之地就变少了，因为自动化重构工具经常能提供足够的支持。如果遇到类似这里的例子，尽管工具无法自动完成整个重构，还是可以更快、更安全地完成关键的提炼和内联步骤，从而简化整个重构过程。
 
 ##  6.6 封装变量（Encapsulate Variable）
@@ -869,14 +913,14 @@ function xxNEWinNewEngland(stateCode) {
 
   曾用名：封装字段（Encapsulate Field）
 
-  
+```js
   let defaultOwner = {firstName: "Martin", lastName: "Fowler"};
 
   
   let defaultOwnerData = {firstName: "Martin", lastName: "Fowler"};
 export function defaultOwner()       {return defaultOwnerData;}
 export function setDefaultOwner(arg) {defaultOwnerData = arg;}
-
+```
   动机
 
   重构的作用就是调整程序中的元素。函数相对容易调整一些，因为函数只有一种用法，就是调用。在改名或搬移函数的过程中，总是可以比较容易地保留旧函数作为转发函数（即旧代码调用旧函数，旧函数再调用新函数）。这样的转发函数通常不会存在太久，但的确能够简化重构过程。
@@ -916,63 +960,74 @@ export function setDefaultOwner(arg) {defaultOwnerData = arg;}
   范例
 
   下面这个全局变量中保存了一些有用的数据：
+```js
   let defaultOwner = {firstName: "Martin", lastName: "Fowler"};
-
+```
   使用它的代码平淡无奇：
+```js
   spaceship.owner = defaultOwner;
-
+```
   更新这段数据的代码是这样：
+```js
   defaultOwner = {firstName: "Rebecca", lastName: "Parsons"};
-
+```
   首先我要定义读取和写入这段数据的函数，给它做个基础的封装。
+```js
   function getDefaultOwner() {return defaultOwner;}
 function setDefaultOwner(arg) {defaultOwner = arg;}
-
+```
   然后就开始处理使用defaultOwner的代码。每看见一处引用该数据的代码，就将其改为调用取值函数。
+```js
   spaceship.owner = getDefaultOwner();
-
+```
   每看见一处给变量赋值的代码，就将其改为调用设值函数。
+```js
   setDefaultOwner({firstName: "Rebecca", lastName: "Parsons"});
-
+```
   每次替换之后，执行测试。
 
   处理完所有使用该变量的代码之后，我就可以限制它的可见性。这一步的用意有两个，一来是检查是否遗漏了变量的引用，二来可以保证以后的代码也不会直接访问该变量。在JavaScript中，我可以把变量和访问函数搬移到单独一个文件中，并且只导出访问函数，这样就限制了变量的可见性。
 
   defaultOwner.js...
+```js
   let defaultOwner = {firstName: "Martin", lastName: "Fowler"}; 
 export function getDefaultOwner()    {return defaultOwner;} 
 export function setDefaultOwner(arg) {defaultOwner = arg;}
-
+```
   如果条件不允许限制对变量的访问，可以将变量改名，然后再次执行测试，检查是否仍有代码在直接使用该变量。这阻止不了未来的代码直接访问变量，不过可以给变量起个有意义又难看的名字（例如__privateOnly_defaultOwner），提醒后来的客户端。
 
   我不喜欢给取值函数加上get前缀，所以我对这个函数改名。
 
   defaultOwner.js...
+```js
   let defaultOwnerData = {firstName: "Martin", lastName: "Fowler"}; 
 export function getdefaultOwner()      {return defaultOwnerData;} 
 export function setDefaultOwner(arg) {defaultOwnerData = arg;}
-
+```
   JavaScript有一种惯例：给取值函数和设值函数起同样的名字，根据有没有传入参数来区分。我把这种做法称为“重载取值/设值函数”（Overloaded Getter Setter）[mf-orgs]，并且我强烈反对这种做法。所以，虽然我不喜欢get前缀，但我会保留set前缀。
 
   封装值
 
   前面介绍的基本重构手法对数据结构的引用做了封装，使我能控制对该数据结构的访问和重新赋值，但并不能控制对结构内部数据项的修改：
+```js
   const owner1 = defaultOwner(); 
 assert.equal("Fowler", owner1.lastName, "when set"); 
 const owner2 = defaultOwner();
 owner2.lastName = "Parsons";
 assert.equal("Parsons", owner1.lastName, "after change owner2"); // is this ok?
-
+```
   前面的基本重构手法只封装了对最外层数据的引用。很多时候这已经足够了。但也有很多时候，我需要把封装做得更深入，不仅控制对变量引用的修改，还要控制对变量内容的修改。
 
   这有两个办法可以做到。最简单的办法是禁止对数据结构内部的数值做任何修改。我最喜欢的一种做法是修改取值函数，使其返回该数据的一份副本。
 
   defaultOwner.js...
+```js
   let defaultOwnerData = {firstName: "Martin", lastName: "Fowler"};
 export function defaultOwner()       {return Object.assign({}, defaultOwnerData);} 
 export function setDefaultOwner(arg) {defaultOwnerData = arg;}
-
+```
   对于列表数据，我尤其常用这一招。如果我在取值函数中返回数据的一份副本，客户端可以随便修改它，但不会影响到共享的这份数据。但在使用副本的做法时，我必须格外小心：有些代码可能希望能修改共享的数据。若果真如此，我就只能依赖测试来发现问题了。另一种做法是阻止对数据的修改，比如通过封装记录（162）就能很好地实现这一效果。
+```js
   let defaultOwnerData = {firstName: "Martin", lastName: "Fowler"};
 export function defaultOwner()       {return new Person(defaultOwnerData);} 
 export function setDefaultOwner(arg) {defaultOwnerData = arg;}
@@ -985,7 +1040,7 @@ class Person {
  get lastName() {return this._lastName;}
  get firstName() {return this._firstName;}
  // and so on for other properties
-
+```
   现在，如果客户端调用defaultOwner函数获得“默认拥有人”数据、再尝试对其属性（即lastName和firstName）重新赋值，赋值不会产生任何效果。对于侦测或阻止修改数据结构内部的数据项，各种编程语言有不同的方式，所以我会根据当下使用的语言来选择具体的办法。
 
   “侦测和阻止修改数据结构内部的数据项”通常只是个临时处置。随后我可以去除这些修改逻辑，或者提供适当的修改函数。这些都处理完之后，我就可以修改取值函数，使其返回一份数据副本。
@@ -998,12 +1053,12 @@ class Person {
 
 ##  6.7 变量改名（Rename Variable）
 
-  
+```js
   let a = height * width;
 
   
   let area = height * width;
-
+```
   动机
 
   好的命名是整洁编程的核心。变量可以很好地解释一段程序在干什么——如果变量名起得好的话。但我经常会把名字起错——有时是因为想得不够仔细，有时是因为我对问题的理解加深了，还有时是因为程序的用途随着用户的需求改变了。
@@ -1035,28 +1090,33 @@ class Person {
   如果要改名的变量只作用于一个函数（临时变量或者参数），对其改名是最简单的。这种情况太简单，根本不需要范例：找到变量的所有引用，修改过来就行。完成修改之后，我会执行测试，确保没有破坏什么东西。
 
   如果变量的作用域不止于单个函数，问题就会出现。代码库的各处可能有很多地方使用它：
+```js
   let tpHd = "untitled";
-
+```
   有些地方是在读取变量值：
+```js
   result += `&lt;h1&gt;${tpHd}&lt;/h1&gt;`;
-
+```
   另一些地方则更新它的值：
+```js
   tpHd = obj['articleTitle'];
-
+```
   对于这种情况，我通常的反应是运用封装变量（132）：
+```js
   result += `&lt;h1&gt;${title()}&lt;/h1&gt;`;
 
 setTitle(obj['articleTitle']); 
 
  function title()       {return tpHd;}
  function setTitle(arg) {tpHd = arg;}
-
+```
   现在就可以给变量改名：
+```js
   let _title = "untitled";
 
 function title()       {return _title;}
 function setTitle(arg) {_title = arg;}
-
+```
   我可以继续重构下去，将包装函数内联回去，这样所有的调用者就变回直接使用变量的状态。不过我很少这样做。如果这个变量被广泛使用，以至于我感到需要先做封装才敢改名，那就有必要保持这个状态，将变量封装在函数后面。
 
   
@@ -1066,19 +1126,21 @@ function setTitle(arg) {_title = arg;}
   给常量改名
 
   如果我想改名的是一个常量（或者在客户端看来就像是常量的元素），我可以复制这个常量，这样既不需要封装，又可以逐步完成改名。假如原来的变量声明是这样：
+  ```js
   const cpyNm = "Acme Gooseberries";
-
+```
   改名的第一步是复制这个常量：
+```js
   const companyName = "Acme Gooseberries"; 
 const cpyNm = companyName;
-
+```
   有了这个副本，我就可以逐一修改引用旧常量的代码，使其引用新的常量。全部修改完成后，我会删掉旧的常量。我喜欢先声明新的常量名，然后把新常量复制给旧的名字。这样最后删除旧名字时会稍微容易一点，如果测试失败，再把旧常量放回来也稍微容易一点。
 
   这个做法不仅适用于常量，也同样适用于客户端只能读取的变量（例如JavaScript模块中导出的变量）。
 
 ##  6.8 引入参数对象（Introduce Parameter Object）
 
-  
+```js
   function amountInvoiced(startDate, endDate) {...} 
 function amountReceived(startDate, endDate) {...} 
 function amountOverdue(startDate, endDate) {...}
@@ -1087,7 +1149,7 @@ function amountOverdue(startDate, endDate) {...}
   function amountInvoiced(aDateRange) {...} 
 function amountReceived(aDateRange) {...} 
 function amountOverdue(aDateRange) {...}
-
+```
   动机
 
   我常会看见，一组数据项总是结伴同行，出没于一个又一个函数。这样一组数据就是所谓的数据泥团，我喜欢代之以一个数据结构。
@@ -1121,6 +1183,7 @@ function amountOverdue(aDateRange) {...}
   范例
 
   下面要展示的代码会查看一组温度读数（reading），检查是否有任何一条读数超出了指定的运作温度范围（range）。温度读数的数据如下：
+```js
   const station = { name: "ZB1",
          readings: [
           {temp: 47, time: "2016-11-10 09:10"},
@@ -1130,21 +1193,24 @@ function amountOverdue(aDateRange) {...}
           {temp: 51, time: "2016-11-10 09:50"},
          ]
         };
-
+```
   下面的函数负责找到超出指定范围的温度读数：
+```js
   function readingsOutsideRange(station, min, max) { 
  return station.readings
   .filter(r =&gt; r.temp &lt; min || r.temp &gt; max);
 }
-
+```
   调用该函数的代码可能是下面这样的。
 
   调用方
+```js
   alerts = readingsOutsideRange(station,
                operatingPlan.temperatureFloor, 
                operatingPlan.temperatureCeiling);
-
+```
   请注意，这里的调用代码从另一个对象中抽出两项数据，转手又把这一对数据传递给readingsOutsideRange。代表“运作计划”的operatingPlan对象用了另外的名字来表示温度范围的下限和上限，与readingsOutsideRange中所用的名字不同。像这样用两项各不相干的数据来表示一个范围的情况并不少见，最好是将其组合成一个对象。我会首先为要组合的数据声明一个类：
+```js
   class NumberRange { 
  constructor(min, max) {
   this._data = {min: min, max: max};
@@ -1152,73 +1218,82 @@ function amountOverdue(aDateRange) {...}
  get min() {return this._data.min;} 
  get max() {return this._data.max;}
 }
-
+```
   我声明了一个类，而不是基本的JavaScript对象，因为这个重构通常只是一系列重构的起点，随后我会把行为搬移到新建的对象中。既然类更适合承载数据与行为的组合，我就直接从声明一个类开始。同时，在这个新类中，我不会提供任何更新数据的函数，因为我有可能将其处理成值对象（Value Object）[mf-vo]。在使用这个重构手法时，大多数情况下我都会创建值对象。
 
   然后我会运用改变函数声明（124），把新的对象作为参数传给readingsOutsideRange。
+```js
   function readingsOutsideRange(station, min, max, range) { 
  return station.readings
   .filter(r =&gt; r.temp &lt; min || r.temp &gt; max);
 }
-
+```
   在JavaScript中，此时我不需要修改调用方代码，但在其他语言中，我必须在调用处为新参数传入null值，就像下面这样。
 
   调用方
+```js
   alerts = readingsOutsideRange(station,
                operatingPlan.temperatureFloor, 
                operatingPlan.temperatureCeiling, 
                null);
-
+```
   到目前为止，我还没有修改任何行为，所以测试应该仍然能通过。随后，我会挨个找到函数的调用处，传入合适的温度范围。
 
   调用方
+```js
   const range = new NumberRange(operatingPlan.temperatureFloor, operatingPlan.temperatureCeiling);
 alerts = readingsOutsideRange(station,
                operatingPlan.temperatureFloor, 
                operatingPlan.temperatureCeiling, 
                range);
-
+```
   此时我还是没有修改任何行为，因为新添的参数没有被使用。所有测试应该仍然能通过。
 
   现在我可以开始修改使用参数的代码了。先从“最大值”开始：
+```js
   function readingsOutsideRange(station, min, max, range) { 
  return station.readings
   .filter(r =&gt; r.temp &lt; min || r.temp &gt; range.max);
 }
-
+```
   调用方
+```js
   const range = new NumberRange(operatingPlan.temperatureFloor, operatingPlan.temperatureCeiling); 
 alerts = readingsOutsideRange(station,
                operatingPlan.temperatureFloor, 
                operatingPlan.temperatureCeiling,
                range);
-
+```
   此时要执行测试。如果测试通过，我再接着处理另一个参数。
+```js
   function readingsOutsideRange(station, min, range) { 
  return station.readings
   .filter(r =&gt; r.temp &lt; range.min || r.temp &gt; range.max);
 }
-
+```
   调用方
+```js
   const range = new NumberRange(operatingPlan.temperatureFloor, operatingPlan.temperatureCeiling); 
 alerts = readingsOutsideRange(station,
                operatingPlan.temperatureFloor,
                range);
-
+```
   这项重构手法到这儿就完成了。不过，将一堆参数替换成一个真正的对象，这只是长征第一步。创建一个类是为了把行为搬移进去。在这里，我可以给“范围”类添加一个函数，用于测试一个值是否落在范围之内。
+```js
   function readingsOutsideRange(station, range) { 
  return station.readings
   .f ilter(r =&gt; !range.contains(r.temp));
 }
-
+```
   class NumberRange...
+```js
   contains(arg) {return (arg &gt;= this.min &amp;&amp; arg &lt;= this.max);}
-
+```
   这样我就迈出了第一步，开始逐渐打造一个真正有用的“范围”[mf-range]类。一旦识别出“范围”这个概念，那么每当我在代码中发现“最大/最小值”这样一对数字时，我就会考虑是否可以将其改为使用“范围”类。（例如，我马上就会考虑把“运作计划”类中的temperatureFloor和temperatureCeiling替换为temperatureRange。）在观察这些成对出现的数字如何被使用时，我会发现一些有用的行为，并将其搬移到“范围”类中，简化其使用方法。比如，我可能会先给这个类加上“基于数值判断相等性”的函数，使其成为一个真正的值对象。
 
 ##  6.9 函数组合成类（Combine Functions into Class）
 
-  
+```js
   function base(aReading) {...}
 function taxableCharge(aReading) {...} 
 function calculateBaseCharge(aReading) {...}
@@ -1229,7 +1304,7 @@ function calculateBaseCharge(aReading) {...}
   taxableCharge() {...} 
   calculateBaseCharge() {...}
 }
-
+```
   动机
 
   类，在大多数现代编程语言中都是基本的构造。它们把数据与函数捆绑到同一个环境中，将一部分数据与函数暴露给其他程序元素以便协作。它们是面向对象语言的首要构造，在其他程序设计方法中也同样有用。
@@ -1269,34 +1344,39 @@ function calculateBaseCharge(aReading) {...}
   范例
 
   我在英格兰长大，那是一个热爱喝茶的国度。（个人而言，我不喜欢在英格兰喝到的大部分茶，对中国茶和日本茶倒是情有独钟。）所以，我虚构了一种用于向老百姓供给茶水的公共设施。每个月会有软件读取茶水计量器的数据，得到类似这样的读数（reading）：
+```js
   reading = {customer: "ivan", quantity: 10, month: 5, year: 2017};
-
+```
   浏览处理这些数据记录的代码，我发现有很多地方在做着相似的计算，于是我找到了一处计算“基础费用”（base charge）的逻辑。
 
   客户端1...
+```js
   const aReading = acquireReading();
 const baseCharge = baseRate(aReading.month, aReading.year) * aReading.quantity;
-
+```
   在英格兰，一切生活必需品都得交税，茶自然也不例外。不过，按照规定，只要不超出某个必要用量，就不用交税。
 
   客户端2...
+```js
   const aReading = acquireReading();
 const base = (baseRate(aReading.month, aReading.year) * aReading.quantity); 
 const taxableCharge = Math.max(0, base - taxThreshold(aReading.year));
-
+```
   我相信你也发现了：计算基础费用的公式被重复了两遍。如果你跟我有一样的习惯，现在大概已经在着手提炼函数（106）了。有趣的是，好像别人已经动过这个脑筋了。
 
   客户端3...
+```js
   const aReading = acquireReading();
 const basicChargeAmount = calculateBaseCharge(aReading);
 
 function calculateBaseCharge(aReading) {
   return baseRate(aReading.month, aReading.year) * aReading.quantity;
 }
-
+```
   看到这里，我有一种自然的冲动，想把前面两处客户端代码都改为使用这个函数。但这样一个顶层函数的问题在于，它通常位于一个文件中，读者不一定能想到来这里寻找它。我更愿意对代码多做些修改，让该函数与其处理的数据在空间上有更紧密的联系。为此目的，不妨把数据本身变成一个类。
 
   我可以运用封装记录（162）将记录变成类。
+```js
   class Reading {
  constructor(data) {
   this._customer = data.customer;
@@ -1309,79 +1389,90 @@ function calculateBaseCharge(aReading) {
  get month()    {return this._month;}
  get year()     {return this._year;}
 }
-
+```
   首先，我想把手上已有的函数calculateBaseCharge搬到新建的Reading类中。一得到原始的读数数据，我就用Reading类将它包装起来，然后就可以在函数中使用Reading类了。
 
   客户端3...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const basicChargeAmount = calculateBaseCharge(aReading);
-
+```
   然后我用搬移函数（198）把calculateBaseCharge搬到新类中。
 
   class Reading...
+```js
   get calculateBaseCharge() {
   return baseRate(this.month, this.year) * this.quantity;
 }
-
+```
   客户端3...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const basicChargeAmount = aReading.calculateBaseCharge;
-
+```
   搬移的同时，我会顺便运用函数改名（124），按照我喜欢的风格对这个函数改名。
+```js
   get baseCharge() {
   return baseRate(this.month, this.year) * this.quantity;
 }
-
+```
   客户端3...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const basicChargeAmount = aReading.baseCharge;
-
+```
   用这个名字，Reading类的客户端将不知道baseCharge究竟是一个字段还是推演计算出的值。这是好事，它符合“统一访问原则”（Uniform Access Principle）[mf-ua]。
 
   现在我可以修改客户端1的代码，令其调用新的方法，不要重复计算基础费用。
 
   客户端1...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const baseCharge = aReading.baseCharge;
-
+```
   很有可能我会顺手用内联变量（123）把baseCharge变量给去掉。不过，我们当下介绍的重构手法更关心“计算应税费用”的逻辑。同样，我先将那里的客户端代码改为使用新建的baseCharge属性。
 
   客户端2...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const taxableCharge = Math.max(0, aReading.baseCharge - taxThreshold(aReading.year));
-
+```
   运用提炼函数（106）将计算应税费用（taxable charge）的逻辑提炼成函数：
+```js
   function taxableChargeFn(aReading) {
   return Math.max(0, aReading.baseCharge - taxThreshold(aReading.year));
 }
-
+```
   客户端3...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const taxableCharge = taxableChargeFn(aReading);
-
+```
   然后我运用搬移函数（198）将其移入Reading类：
 
   class Reading...
+```js
   get taxableCharge() {
   return Math.max(0, this.baseCharge - taxThreshold(this.year));
 }
-
+```
   客户端3...
+```js
   const rawReading = acquireReading(); 
 const aReading = new Reading(rawReading);
 const taxableCharge = aReading.taxableCharge;
-
+```
   由于所有派生数据都是在使用时计算得出的，所以对存储下来的读数进行修改也没问题。一般而论，我更倾向于使用不可变的数据；但很多时候我们必须得使用可变数据（比如JavaScript整个语言生态在设计时就没有考虑数据的不可变性）。如果数据确有可能被更新，那么用类将其封装起来会很有帮助。
 
 ##  6.10 函数组合成变换（Combine Functions into Transform）
 
-  
+```js
   function base(aReading) {...}
 function taxableCharge(aReading) {...}
 
@@ -1392,7 +1483,7 @@ function taxableCharge(aReading) {...}
   aReading.taxableCharge = taxableCharge(aReading);
   return aReading;
 }
-
+```
   动机
 
   在软件中，经常需要把数据“喂”给一个程序，让它再计算出各种派生信息。这些派生数值可能会在几个不同地方用到，因此这些计算逻辑也常会在用到派生数据的地方重复。我更愿意把所有计算派生数据的逻辑收拢到一处，这样始终可以在固定的地方找到和更新这些逻辑，避免到处重复。
@@ -1430,39 +1521,44 @@ function taxableCharge(aReading) {...}
   范例
 
   在我长大的国度，茶是生活中的重要部分，以至于我想象了这样一种特别的公共设施，专门给老百姓供应茶水。每个月，从这个设备上可以得到读数（reading），从而知道每位顾客取用了多少茶。
+```js
   reading = {customer: "ivan", quantity: 10, month: 5, year: 2017};
-
+```
   几个不同地方的代码分别根据茶的用量进行计算。一处是计算应该向顾客收取的基本费用。
 
   客户端1...
+```js
   const aReading = acquireReading();
 const baseCharge = baseRate(aReading.month, aReading.year) * aReading.quantity;
-
+```
   另一处是计算应该交税的费用—比基本费用要少，因为政府明智地认为，每个市民都有权免税享受一定量的茶水。
 
   客户端2...
+```js
   const aReading = acquireReading();
 const base = (baseRate(aReading.month, aReading.year) * aReading.quantity); 
 const taxableCharge = Math.max(0, base - taxThreshold(aReading.year));
-
+```
   浏览处理这些数据记录的代码，我发现有很多地方在做着相似的计算。这样的重复代码，一旦需要修改（我打赌这只是早晚的问题），就会造成麻烦。我可以用提炼函数（106）来处理这些重复的计算逻辑，但这样提炼出来的函数会散落在程序中，以后的程序员还是很难找到。说真的，我还真在另一块代码中找到了一个这样的函数。
 
   客户端3...
+```
   const aReading = acquireReading();
 const basicChargeAmount = calculateBaseCharge(aReading);
 
 function calculateBaseCharge(aReading) {
   return baseRate(aReading.month, aReading.year) * aReading.quantity;
 }
-
+```
   处理这种情况的一个办法是，把所有这些计算派生数据的逻辑搬移到一个变换函数中，该函数接受原始的“读数”作为输入，输出则是增强的“读数”记录，其中包含所有共用的派生数据。
 
   我先要创建一个变换函数，它要做的事很简单，就是复制输入的对象：
+```js
   function enrichReading(original) { 
   const result = _.cloneDeep(original); 
   return result;
 }
-
+```
   我用了Lodash库的cloneDeep函数来进行深复制。
 
   这个变换函数返回的本质上仍是原来的对象，只是添加了更多的信息在上面。对于这种函数，我喜欢用“enrich”（增强）这个词来给它命名。如果它生成的是跟原来完全不同的对象，我就会用“transform”（变换）来命名它。
@@ -1470,82 +1566,92 @@ function calculateBaseCharge(aReading) {
   然后我挑选一处想要搬移的计算逻辑。首先，我用现在的enrichReading函数来增强“读数”记录，尽管该函数暂时还什么都没做。
 
   客户端3...
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading);
 const basicChargeAmount = calculateBaseCharge(aReading);
-
+```
   然后我运用搬移函数（198）把calculateBaseCharge函数搬移到增强过程中：
+```js
   function enrichReading(original) {
   const result = _.cloneDeep(original);
   result.baseCharge = calculateBaseCharge(result);
   return result;
 }
-
+```
   在变换函数内部，我乐得直接修改结果对象，而不是每次都复制一个新对象。我喜欢不可变的数据，但在大部分编程语言中，保持数据完全不可变很困难。在程序模块的边界处，我做好了心理准备，多花些精力来支持不可变性。但在较小的范围内，我可以接受可变的数据。另外，我把这里用到的变量命名为aReading，表示它是一个累积变量（accumulating variable）。这样当我把更多的逻辑搬移到变换函数enrichReading中时，这个变量名也仍然适用。
 
   修改客户端代码，令其改用增强后的字段：
 
   客户端3...
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading); 
 const basicChargeAmount = aReading.baseCharge;
-
+```
   当所有调用calculateBaseCharge的地方都修改完成后，就可以把这个函数内嵌到enrichReading函数中，从而更清楚地表明态度：如果需要“计算基本费用”的逻辑，请使用增强后的记录。
 
   在这里要当心一个陷阱：在编写enrichReading函数时，我让它返回了增强后的读数记录，这背后隐含的意思是原始的读数记录不会被修改。所以我最好为此加个测试。
+```js
   it('check reading unchanged', function() {
   const baseReading = {customer: "ivan", quantity: 15, month: 5, year: 2017}; 
   const oracle = _.cloneDeep(baseReading);
   enrichReading(baseReading); 
   assert.deepEqual(baseReading, oracle);
 });
-
+```
   现在我可以修改客户端1的代码，让它也使用这个新添的字段。
 
   客户端1...
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading);
 const baseCharge = aReading.baseCharge;
-
+```
   此时可以考虑用内联变量（123）去掉baseCharge变量。
 
   现在我转头去看“计算应税费用”的逻辑。第一步是把变换函数用起来：
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading);
 const base = (baseRate(aReading.month, aReading.year) * aReading.quantity); 
 const taxableCharge = Math.max(0, base - taxThreshold(aReading.year));
-
+```
   基本费用的计算逻辑马上就可以改用变换得到的新字段代替。如果计算逻辑比较复杂，我可以先运用提炼函数（106）。不过这里的情况足够简单，一步到位修改过来就行。
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading); 
 const base = aReading.baseCharge;
 const taxableCharge = Math.max(0, base - taxThreshold(aReading.year));
-
+```
   执行测试之后，我就用内联变量（123）去掉base变量：
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading);
 const taxableCharge = Math.max(0, aReading.baseCharge - taxThreshold(aReading.year));
-
+```
   然后把计算逻辑搬移到变换函数中：
+```js
   function enrichReading(original) { 
   const result = _.cloneDeep(original);
   result.baseCharge = calculateBaseCharge(result);
   result.taxableCharge = Math.max(0, result.baseCharge - taxThreshold(result.year));
   return result;
 }
-
+```
   修改使用方代码，让它使用新添的字段。
+```js
   const rawReading = acquireReading();
 const aReading = enrichReading(rawReading); 
 const taxableCharge = aReading.taxableCharge;
-
+```
   测试。现在我可以再次用内联变量（123）把taxableCharge变量也去掉。
 
   增强后的读数记录有一个大问题：如果某个客户端修改了一项数据的值，会发生什么？比如说，如果某处代码修改了quantity字段的值，就会导致数据不一致。在JavaScript中，避免这种情况最好的办法是不要使用本重构手法，改用函数组合成类（144）。如果编程语言支持不可变的数据结构，那么就没有这个问题了，那样的语言中会更常用到变换。但即便编程语言不支持数据结构不可变，如果数据是在只读的上下文中被使用（例如在网页上显示派生数据），还是可以使用变换。
 
 ##  6.11 拆分阶段（Split Phase）
 
-  
+```js
   const orderData = orderString.split(/\s+/);
 const productPrice = priceList[orderData[0].split("-")[1]]; 
 const orderPrice = parseInt(orderData[1]) * productPrice;
@@ -1564,7 +1670,7 @@ function parseOrder(aString) {
 function price(order, priceList) {
  return order.quantity * priceList[order.productID];
 }
-
+```
   动机
 
   每当看见一段代码在同时处理两件不同的事，我就想把它拆分成各自独立的模块，因为这样到了需要修改的时候，我就可以单独处理每个主题，而不必同时在脑子里考虑两个不同的主题。如果运气够好的话，我可能只需要修改其中一个模块，完全不用回忆起另一个模块的诸般细节。
@@ -1604,6 +1710,7 @@ function price(order, priceList) {
   范例
 
   我手上有一段“计算订单价格”的代码，至于订单中的商品是什么，我们从代码中看不出来，也不太关心。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const basePrice = product.basePrice * quantity;
  const discount = Math.max(quantity - product.discountThreshold, 0)
@@ -1614,10 +1721,11 @@ function price(order, priceList) {
  const price = basePrice - discount + shippingCost; 
  return price;
 }
-
+```
   虽然只是个常见的、过于简单的范例，从中还是能看出有两个不同阶段存在的。前两行代码根据商品（product）信息计算订单中与商品相关的价格，随后的两行则根据配送（shipping）信息计算配送成本。后续的修改可能还会使价格和配送的计算逻辑变复杂，但只要这两块逻辑相对独立，将这段代码拆分成两个阶段就是有价值的。
 
   我首先用提炼函数（106）把计算配送成本的逻辑提炼出来。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const basePrice = product.basePrice * quantity;
  const discount = Math.max(quantity - product.discountThreshold, 0)
@@ -1632,10 +1740,11 @@ function applyShipping(basePrice, shippingMethod, quantity, discount) {
  const price = basePrice - discount + shippingCost; 
  return price;
 }
-
+```
   第二阶段需要的数据都以参数形式传入。在真实环境下，参数的数量可能会很多，但我对此并不担心，因为很快就会将这些参数消除掉。
 
   随后我会引入一个中转数据结构，使其在两阶段之间沟通信息。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const basePrice = product.basePrice * quantity;
  const discount = Math.max(quantity - product.discountThreshold, 0)
@@ -1652,8 +1761,9 @@ function applyShipping(priceData, basePrice, shippingMethod, quantity, discount)
  const price = basePrice - discount + shippingCost; 
  return price;
 }
-
+```
   现在我会审视applyShipping的各个参数。第一个参数basePrice是在第一阶段代码中创建的，因此我将其移入中转数据结构，并将其从参数列表中去掉。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const basePrice = product.basePrice * quantity;
  const discount = Math.max(quantity - product.discountThreshold, 0)
@@ -1669,10 +1779,11 @@ function applyShipping(priceData, basePrice, shippingMethod, quantity, discount)
  const price = priceData.basePrice - discount + shippingCost; 
  return price;
 }
-
+```
   下一个参数是shippingMethod。第一阶段中没有使用这项数据，所以它可以保留原样。
 
   再下一个参数是quantity。这个参数在第一阶段中用到，但不是在那里创建的，所以其实可以将其留在参数列表中。但我更倾向于把尽可能多的参数搬移到中转数据结构中。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const basePrice = product.basePrice * quantity;
  const discount = Math.max(quantity - product.discountThreshold, 0)
@@ -1688,8 +1799,9 @@ function applyShipping(priceData, shippingMethod, quantity, discount) {
  const price = priceData.basePrice - discount + shippingCost; 
  return price;
 }
-
+```
   对discount参数我也如法炮制。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const basePrice = product.basePrice * quantity;
  const discount = Math.max(quantity - product.discountThreshold, 0)
@@ -1705,8 +1817,9 @@ function applyShipping(priceData, shippingMethod, discount) {
  const price = priceData.basePrice - priceData.discount + shippingCost; 
  return price;
 }
-
+```
   处理完参数列表后，中转数据结构得到了完整的填充，现在我可以把第一阶段代码提炼成独立的函数，令其返回这份数据。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const priceData = calculatePricingData(product, quantity); 
  const price = applyShipping(priceData, shippingMethod); 
@@ -1725,8 +1838,9 @@ function applyShipping(priceData, shippingMethod) {
  const price = priceData.basePrice - priceData.discount + shippingCost; 
  return price;
 }
-
+```
   两个函数中，最后一个const变量都是多余的，我忍不住洁癖，将它们内联消除掉。
+```js
   function priceOrder(product, quantity, shippingMethod) { 
  const priceData = calculatePricingData(product, quantity); 
  return applyShipping(priceData, shippingMethod);
@@ -1745,5 +1859,5 @@ function applyShipping(priceData, shippingMethod) {
  const shippingCost = priceData.quantity * shippingPerCase;
  return priceData.basePrice - priceData.discount + shippingCost;
 }
-
+```
   
