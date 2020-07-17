@@ -150,12 +150,12 @@ function discount (inputValue, quantity) {
 ## 9.2 字段改名（Rename Field）
 
 ```js
-  class Organization {
+class  Organization {
   get name() {...}
 }
 
 
-  class Organization {
+class  Organization {
   get title() {...}
 }
 ```
