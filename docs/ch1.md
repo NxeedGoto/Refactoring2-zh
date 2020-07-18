@@ -18,7 +18,7 @@
 
 该剧团将剧目的数据存储在一个简单的 JSON 文件中。
 
-plays.json...
+#### plays.json...
 
 ```json
 {
@@ -30,7 +30,7 @@ plays.json...
 
 他们开出的账单也存储在一个 JSON 文件里。
 
-invoices.json...
+#### invoices.json...
 
 ```json
 [
@@ -201,7 +201,7 @@ function statement (invoice, plays) {
 
 首先，我需要检查一下，如果我将这块代码提炼到自己的一个函数里，有哪些变量会离开原本的作用域。在此示例中，是 perf、play 和 thisAmount 这 3 个变量。前两个变量会被提炼后的函数使用，但不会被修改，那么我就可以将它们以参数方式传递进来。我更关心那些会被修改的变量。这里只有唯一一个——thisAmount，因此可以将它从函数中直接返回。我还可以将其初始化放到提炼后的函数里。修改后的代码如下所示。
 
-function statement...
+#### function statement...
 
 ```js
 function amountFor(perf, play) {
@@ -231,7 +231,7 @@ function amountFor(perf, play) {
 
 现在原 statement 函数可以直接调用这个新函数来初始化 thisAmount。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -277,7 +277,7 @@ function statement (invoice, plays) {
 
 完成提炼函数（106）手法后，我会看看提炼出来的函数，看是否能进一步提升其表达能力。一般我做的第一件事就是给一些变量改名，使它们更简洁，比如将 thisAmount 重命名为 result。
 
-function statement...
+#### function statement...
 
 ```js
 function amountFor(perf, play) {
@@ -305,7 +305,7 @@ function amountFor(perf, play) {
 
 这是我个人的编码风格：永远将函数的返回值命名为“result”，这样我一眼就能知道它的作用。然后我再次编译、测试、提交代码。接着，我前往下一个目标——函数参数。
 
-function statement...
+#### function statement...
 
 ```js
 function amountFor(aPerformance, play) {
@@ -347,7 +347,7 @@ function amountFor(aPerformance, play) {
 
 我先从赋值表达式的右边部分提炼出一个函数来。
 
-function statement...
+#### function statement...
 
 ```js
 function playFor(aPerformance) {
@@ -355,7 +355,7 @@ function playFor(aPerformance) {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -385,7 +385,7 @@ function statement (invoice, plays) {
 
 编译、测试、提交，然后使用内联变量（123）手法内联 play 变量。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -415,7 +415,7 @@ function statement (invoice, plays) {
 
 编译、测试、提交。完成变量内联后，我可以对 amountFor 函数应用改变函数声明（124），移除 play 参数。我会分两步走。首先在 amountFor 函数内部使用新提炼的函数。
 
-function statement...
+#### function statement...
 
 ```js
 function amountFor(aPerformance, play) {
@@ -443,7 +443,7 @@ function amountFor(aPerformance, play) {
 
 编译、测试、提交，最后将参数删除。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -470,7 +470,7 @@ function statement (invoice, plays) {
   return result;
 ```
 
-function statement...
+#### function statement...
 
 ```js
 function amountFor(aPerformance , play ) {
@@ -504,7 +504,7 @@ function amountFor(aPerformance , play ) {
 
 处理完 amountFor 的参数后，我回过头来看一下它的调用点。它被赋值给一个临时变量，之后就不再被修改，因此我又采用内联变量（123）手法内联它。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -534,7 +534,7 @@ function statement (invoice, plays) {
 
 现在 statement 函数的内部实现是这样的。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -564,7 +564,7 @@ function statement (invoice, plays) {
 
 我仍需要处理其他两个局部变量。perf 同样可以轻易作为参数传入，但 volumeCredits 变量则有些棘手。它是一个累加变量，循环的每次迭代都会更新它的值。因此最简单的方式是，将整块逻辑提炼到新函数中，然后在新函数中直接返回 volumeCredits。
 
-function statement...
+#### function statement...
 
 ```js
 function volumeCreditsFor(perf) {
@@ -576,7 +576,7 @@ function volumeCreditsFor(perf) {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -602,7 +602,7 @@ function statement (invoice, plays) {
 
 编译、测试、提交，然后对新函数里的变量改名。
 
-function statement...
+#### function statement...
 
 ```js
 function volumeCreditsFor(aPerformance) {
@@ -620,7 +620,7 @@ function volumeCreditsFor(aPerformance) {
 
 我们再看一下 statement 这个主函数。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -644,7 +644,7 @@ function statement (invoice, plays) {
 
 正如我上面所指出的，临时变量往往会带来麻烦。它们只在对其进行处理的代码块中有用，因此临时变量实质上是鼓励你写长而复杂的函数。因此，下一步我要替换掉一些临时变量，而最简单的莫过于从 format 变量入手。这是典型的“将函数赋值给临时变量”的场景，我更愿意将其替换为一个明确声明的函数。
 
-function statement...
+#### function statement...
 
 ```js
 function format(aNumber) {
@@ -656,7 +656,7 @@ function format(aNumber) {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -681,7 +681,7 @@ function statement (invoice, plays) {
 
 我对提炼得到的函数名称不很满意——format 未能清晰地描述其作用。formatAsUSD 很表意，但又太长，特别它仅是小范围地被用在一个字符串模板中。我认为这里真正需要强调的是，它格式化的是一个货币数字，因此我选取了一个能体现此意图的命名，并应用了改变函数声明（124）手法。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -700,7 +700,7 @@ function statement (invoice, plays) {
   return result;
 ```
 
-function statement...
+#### function statement...
 
 ```js
 function usd(aNumber) {
@@ -720,7 +720,7 @@ function usd(aNumber) {
 
 我的下一个重构目标是 volumeCredits。处理这个变量更加微妙，因为它是在循环的迭代过程中累加得到的。第一步，就是应用拆分循环（227）将 volumeCredits 的累加过程分离出来。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -768,7 +768,7 @@ function statement (invoice, plays) {
 
 把与更新 volumeCredits 变量相关的代码都集中到一起，有利于以查询取代临时变量（178）手法的施展。第一步同样是先对变量的计算过程应用提炼函数（106）手法。
 
-function statement...
+#### function statement...
 
 ```js
 function totalVolumeCredits() {
@@ -780,7 +780,7 @@ function totalVolumeCredits() {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -800,7 +800,7 @@ function statement (invoice, plays) {
 
 完成函数提炼后，我再应用内联变量（123）手法内联 totalVolumeCredits 函数。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -835,7 +835,7 @@ function statement (invoice, plays) {
 
 接着我要重复同样的步骤来移除 totalAmount。我以拆解循环开始（编译、测试、提交），然后下移累加变量的声明语句（编译、测试、提交），最后再提炼函数。这里令我有点头疼的是：最好的函数名应该是 totalAmount，但它已经被变量名占用，我无法起两个同样的名字。因此，我在提炼函数时先给它随便取了一个名字（然后编译、测试、提交）。
 
-function statement...
+#### function statement...
 
 ```js
 function appleSauce() {
@@ -847,7 +847,7 @@ function appleSauce() {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -864,7 +864,7 @@ function statement (invoice, plays) {
 
 接着我将变量内联（编译、测试、提交），然后将函数名改回 totalAmount（编译、测试、提交）。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -875,9 +875,12 @@ function statement (invoice, plays) {
   result += `Amount owed is ${usd(totalAmount())}\n`;
   result += `You earned ${totalVolumeCredits()} credits\n`;
   return result;
+```
 
-  function statement...
-  function totalAmount() {
+#### function statement...
+
+```js
+function totalAmount() {
   let totalAmount = 0;
   for (let perf of invoice.performances) {
     totalAmount += amountFor(perf);
@@ -888,7 +891,7 @@ function statement (invoice, plays) {
 
 趁着给新提炼的函数改名的机会，我顺手一并修改了函数内部的变量名，以便保持我一贯的编码风格。
 
-function statement...
+#### function statement...
 
 ```js
 function totalAmount() {
@@ -1053,7 +1056,7 @@ function renderPlainText(data, invoice, plays) {
 
 我将 performances 字段也搬移过去，这样我就可以移除掉 renderPlainText 的 invoice 参数（编译、测试、提交）。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function statement (invoice, plays) {
@@ -1073,7 +1076,7 @@ function renderPlainText(data, plays) {
   return result;
 ```
 
-function renderPlainText...
+#### function renderPlainText...
 
 ```js
 function totalAmount() {
@@ -1115,7 +1118,7 @@ function statement (invoice, plays) {
 
 现在我们已经有了安放 play 字段的地方，可以把数据放进去。我需要对 playFor 和 statement 函数应用搬移函数（198）（然后编译、测试、提交）。
 
-function statement...
+#### function statement...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1131,7 +1134,7 @@ function playFor(aPerformance) {
 
 然后替换 renderPlainText 中对 playFor 的所有引用点，让它们使用新数据（编译、测试、提交）。
 
-function renderPlainText...
+#### function renderPlainText...
 
 ```js
   let result = `Statement for ${data.customer}\n`;
@@ -1174,7 +1177,7 @@ functionamountFor(aPerformance){
 
 接着我使用类似的手法搬移 amountFor 函数（编译、测试、提交）。
 
-function statement...
+#### function statement...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1185,11 +1188,16 @@ function enrichPerformance(aPerformance) {
 }
 
 function amountFor(aPerformance) {...}
+```
 
-  function renderPlainText...
-  let result = `Statement for ${data.customer}\n`;
+#### function renderPlainText...
+
+```js
+let result = `Statement for ${data.customer}\n`;
 for (let perf of data.performances) {
-  result += ` ${perf.play.name}: ${usd(perf.amount)} (${perf.audience} seats)\n`;
+  result += ` ${perf.play.name}: ${usd(perf.amount)} (${
+    perf.audience
+  } seats)\n`;
 }
 result += `Amount owed is ${usd(totalAmount())}\n`;
 result += `You earned ${totalVolumeCredits()} credits\n`;
@@ -1206,7 +1214,7 @@ function totalAmount() {
 
 接下来搬移观众量积分的计算（编译、测试、提交）。
 
-function statement...
+#### function statement...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1218,9 +1226,12 @@ function enrichPerformance(aPerformance) {
 }
 
 function volumeCreditsFor(aPerformance) {...}
+```
 
-  function renderPlainText...
-  function totalVolumeCredits() {
+#### function renderPlainText...
+
+```js
+function totalVolumeCredits() {
   let result = 0;
   for (let perf of data.performances) {
     result += perf.volumeCredits;
@@ -1231,7 +1242,7 @@ function volumeCreditsFor(aPerformance) {...}
 
 最后，我将两个计算总数的函数搬移到 statement 函数中。
 
-function statement...
+#### function statement...
 
 ```js
   const statementData = {};
@@ -1243,11 +1254,16 @@ return renderPlainText(statementData, plays);
 
  function totalAmount(data) {...}
    function totalVolumeCredits(data) {...}
+```
 
-  function renderPlainText...
-  let result = `Statement for ${data.customer}\n`;
+#### function renderPlainText...
+
+```js
+let result = `Statement for ${data.customer}\n`;
 for (let perf of data.performances) {
-  result += ` ${perf.play.name}: ${usd(perf.amount)} (${perf.audience} seats)\n`;
+  result += ` ${perf.play.name}: ${usd(perf.amount)} (${
+    perf.audience
+  } seats)\n`;
 }
 result += `Amount owed is ${usd(data.totalAmount)}\n`;
 result += `You earned ${data.totalVolumeCredits} credits\n`;
@@ -1258,7 +1274,7 @@ return result;
 
 等到搬移完成，编译、测试、提交也做完，我便忍不住以管道取代循环（231）对几个地方进行重构。
 
-function renderPlainText...
+#### function renderPlainText...
 
 ```js
   function totalAmount(data) {
@@ -1273,7 +1289,7 @@ function totalVolumeCredits(data) {
 
 现在我可以把第一阶段的代码提炼到一个独立的函数里了（编译、测试、提交）。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
   function statement (invoice, plays) {
@@ -1291,31 +1307,34 @@ function createStatementData(invoice, plays) {
 
 由于两个阶段已经彻底分离，我干脆把它搬移到另一个文件里去（并且修改了返回结果的变量名，与我一贯的编码风格保持一致）。
 
-statement.js...
+#### statement.js...
 
 ```js
-  import createStatementData from './createStatementData.js';
+import createStatementData from "./createStatementData.js";
+```
 
-  createStatementData.js...
-  export default function createStatementData(invoice, plays) {
-  const result = {};
-  result.customer = invoice.customer;
-  result.performances = invoice.performances.map(enrichPerformance);
-  result.totalAmount = totalAmount(result);
-  result.totalVolumeCredits = totalVolumeCredits(result);
-  return result;
+#### createStatementData.js...
 
-  function enrichPerformance(aPerformance) {...}
-    function playFor(aPerformance) {...}
-    function amountFor(aPerformance) {...}
-    function volumeCreditsFor(aPerformance) {...}
-    function totalAmount(data) {...}
-    function totalVolumeCredits(data) {...}
+```js
+export default function createStatementData(invoice, plays) {
+const result = {};
+result.customer = invoice.customer;
+result.performances = invoice.performances.map(enrichPerformance);
+result.totalAmount = totalAmount(result);
+result.totalVolumeCredits = totalVolumeCredits(result);
+return result;
+
+function enrichPerformance(aPerformance) {...}
+  function playFor(aPerformance) {...}
+  function amountFor(aPerformance) {...}
+  function volumeCreditsFor(aPerformance) {...}
+  function totalAmount(data) {...}
+  function totalVolumeCredits(data) {...}
 ```
 
 最后再做一次编译、测试、提交，接下来，要编写一个 HTML 版本的对账单就很简单了。
 
-statement.js...
+#### statement.js...
 
 ```js
 function htmlStatement (invoice, plays) {
@@ -1466,7 +1485,7 @@ createStatementData.js
 
 我先从检查计算代码开始。（之前的重构带来的一大好处是，现在我大可以忽略那些格式化代码，只要不改变中转数据结构就行。我可以进一步添加测试来保证中转数据结构不会被意外修改。）
 
-createStatementData.js...
+#### createStatementData.js...
 
 ```js
 export default function createStatementData(invoice, plays) {
@@ -1528,7 +1547,7 @@ return data.performances
 
 enrichPerformance 函数是关键所在，因为正是它用每场演出的数据来填充中转数据结构。目前它直接调用了计算价格和观众量积分的函数，我需要创建一个类，通过这个类来调用这些函数。由于这个类存放了与每场演出相关数据的计算函数，于是我把它称为演出计算器（performance calculator）。
 
-function createStatementData...
+#### function createStatementData...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1541,7 +1560,7 @@ function enrichPerformance(aPerformance) {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 class PerformanceCalculator {
@@ -1555,20 +1574,26 @@ class PerformanceCalculator {
 
 为此，我将使用改变函数声明（124）手法将 performance 的 play 字段传给计算器。
 
-function createStatementData...
+#### function createStatementData...
 
 ```js
-  function enrichPerformance(aPerformance) {
-  const calculator = new PerformanceCalculator(aPerformance, playFor(aPerformance));
+function enrichPerformance(aPerformance) {
+  const calculator = new PerformanceCalculator(
+    aPerformance,
+    playFor(aPerformance)
+  );
   const result = Object.assign({}, aPerformance);
   result.play = calculator.play;
   result.amount = amountFor(result);
   result.volumeCredits = volumeCreditsFor(result);
   return result;
 }
+```
 
-  class PerformanceCalculator...
-  class PerformanceCalculator {
+#### class PerformanceCalculator...
+
+```js
+class PerformanceCalculator {
   constructor(aPerformance, aPlay) {
     this.performance = aPerformance;
     this.play = aPlay;
@@ -1582,7 +1607,7 @@ function createStatementData...
 
 我要搬移的下一块逻辑，对计算一场演出的价格（amount）来说就尤为重要了。在调整嵌套函数的层级时，我经常将函数挪来挪去，但接下来需要改动到更深入的函数上下文，因此我将小心使用搬移函数（198）来重构它。首先，将 amount 函数的逻辑复制一份到新的上下文中，也就是 PerformanceCalculator 类中。然后微调一下代码，将 aPerformance 改为 this.performance，将 playFor(aPerformance)改为 this.play，使代码适应这个新家。
 
-class PerformanceCalculator...
+#### class PerformanceCalculator...
 
 ```js
   get amount() {
@@ -1612,7 +1637,7 @@ class PerformanceCalculator...
 
 使新函数适应新家后，我会将原来的函数改造成一个委托函数，让它直接调用新函数。
 
-function createStatementData...
+#### function createStatementData...
 
 ```js
 function amountFor(aPerformance) {
@@ -1622,7 +1647,7 @@ function amountFor(aPerformance) {
 
 现在，我可以执行一次编译、测试、提交，确保代码搬到新家后也能如常工作。之后，我应用内联函数（115），让引用点直接调用新函数（然后编译、测试、提交）。
 
-function createStatementData...
+#### function createStatementData...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1640,7 +1665,7 @@ function enrichPerformance(aPerformance) {
 
 搬移观众量积分计算也遵循同样的流程。
 
-function createStatementData...
+#### function createStatementData...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1656,7 +1681,7 @@ function enrichPerformance(aPerformance) {
 }
 ```
 
-class PerformanceCalculator...
+#### class PerformanceCalculator...
 
 ```js
   get volumeCredits() {
@@ -1671,7 +1696,7 @@ class PerformanceCalculator...
 
 我已将全部计算逻辑搬移到一个类中，是时候将它多态化了。第一步是应用以子类取代类型码（362）引入子类，弃用类型代码。为此，我需要为演出计算器创建子类，并在 createStatementData 中获取对应的子类。要得到正确的子类，我需要将构造函数调用替换为一个普通的函数调用，因为 JavaScript 的构造函数里无法返回子类。于是我使用以工厂函数取代构造函数（334）。
 
-function createStatementData...
+#### function createStatementData...
 
 ```js
 function enrichPerformance(aPerformance) {
@@ -1687,7 +1712,7 @@ function enrichPerformance(aPerformance) {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function createPerformanceCalculator(aPerformance, aPlay) {
@@ -1697,7 +1722,7 @@ function createPerformanceCalculator(aPerformance, aPlay) {
 
 改造成普通函数后，我就可以在里面创建演出计算器的子类，然后由创建函数决定返回哪一个子类的实例。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function createPerformanceCalculator(aPerformance, aPlay) {
@@ -1719,7 +1744,7 @@ class ComedyCalculator extends PerformanceCalculator {}
 
 我先从悲剧的价格计算逻辑开始搬移。
 
-class TragedyCalculator...
+#### class TragedyCalculator...
 
 ```js
   get amount() {
@@ -1733,7 +1758,7 @@ class TragedyCalculator...
 
 虽说子类有了这个方法已足以覆盖超类对应的条件分支，但要是你也和我一样偏执，你也许还想在超类的分支上抛一个异常。
 
-class PerformanceCalculator...
+#### class PerformanceCalculator...
 
 ```js
   get amount() {
@@ -1759,7 +1784,7 @@ class PerformanceCalculator...
 
 再次进行编译、测试、提交。之后，将处理喜剧类型的分支也下移到子类中去。
 
-class ComedyCalculator...
+#### class ComedyCalculator...
 
 ```js
   get amount() {
@@ -1774,7 +1799,7 @@ class ComedyCalculator...
 
 理论上讲，我可以将超类的 amount 方法一并移除了，反正它也不应再被调用到。但不删它，给未来的自己留点纪念品也是极好的，顺便可以提醒后来者记得实现这个函数。
 
-class PerformanceCalculator...
+#### class PerformanceCalculator...
 
 ```js
   get amount() {
@@ -1784,15 +1809,18 @@ class PerformanceCalculator...
 
 下一个要替换的条件表达式是观众量积分的计算。我回顾了一下前面关于未来戏剧类型的讨论，发现大多数剧类在计算积分时都会检查观众数是否达到 30，仅一小部分品类有所不同。因此，将更为通用的逻辑放到超类作为默认条件，出现特殊场景时按需覆盖它，听起来十分合理。于是我将一部分喜剧的逻辑下移到子类。
 
-class PerformanceCalculator...
+#### class PerformanceCalculator...
 
 ```js
-  get volumeCredits() {
+get volumeCredits() {
   return Math.max(this.performance.audience - 30, 0);
 }
+```
 
-  class ComedyCalculator...
-  get volumeCredits() {
+#### class ComedyCalculator...
+
+```js
+get volumeCredits() {
   return super.volumeCredits + Math.floor(this.performance.audience / 5);
 }
 ```
