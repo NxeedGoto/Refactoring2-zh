@@ -4,7 +4,7 @@
 
 在线阅读：[http://gdut_yy.gitee.io/doc-refact2/](http://gdut_yy.gitee.io/doc-refact2/)
 
-<!-- <img src="./docs/cover.jpg" width=24% /> -->
+<img src="./docs/cover.jpg" width=24% />
 
 ## 前言
 

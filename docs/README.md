@@ -1,6 +1,6 @@
 # 目录
 
-<!-- <img src="./cover.jpg" style="width: 28%" /> -->
+<img src="./cover.jpg" style="width: 28%" />
 
 - [第 1 章 重构，第一个示例](ch1.md)
 - [第 2 章 重构的原则](ch2.md)
