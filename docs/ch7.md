@@ -92,13 +92,13 @@ function getRawDataOfOrganization() {
 }
 ```
 
-读取的例子...
+#### 读取的例子...
 
 ```js
 result += `&lt;h1&gt;${getRawDataOfOrganization().name}&lt;/h1&gt;`;
 ```
 
-更新的例子...
+#### 更新的例子...
 
 ```js
 getRawDataOfOrganization().name = newName;
@@ -108,7 +108,7 @@ getRawDataOfOrganization().name = newName;
 
 封装记录意味着，仅仅替换变量还不够，我还想控制它的使用方式。我可以用类来替换记录，从而达到这一目的。
 
-class Organization...
+#### class Organization...
 
 ```js
 class Organization {
@@ -136,13 +136,13 @@ function getOrganization() {
 
 创建完对象后，我就能开始寻找该记录的使用点了。所有更新记录的地方，用一个设值函数来替换它。
 
-class Organization...
+#### class Organization...
 
 ```js
   set name(aString) {this._data.name = aString;}
 ```
 
-客户端...
+#### 客户端...
 
 ```js
 getOrganization().name = newName;
@@ -150,13 +150,13 @@ getOrganization().name = newName;
 
 同样地，我将所有读取记录的地方，用一个取值函数来替代。
 
-class Organization...
+#### class Organization...
 
 ```js
 get name() {return this._data.name;}
 ```
 
-客户端...
+#### 客户端...
 
 ```js
 result += `&lt;h1&gt;${getOrganization().name}&lt;/h1&gt;`;
@@ -229,13 +229,13 @@ id: "38673",
 
 对嵌套数据的更新和读取可以进到更深的层级。
 
-更新的例子...
+#### 更新的例子...
 
 ```js
 customerData[customerID].usages[year][month] = amount;
 ```
 
-读取的例子...
+#### 读取的例子...
 
 ```js
 function compareUsage(customerID, laterYear, month) {
@@ -256,13 +256,13 @@ function setRawDataOfCustomers(arg) {
 }
 ```
 
-更新的例子...
+#### 更新的例子...
 
 ```js
 getRawDataOfCustomers()[customerID].usages[year][month] = amount;
 ```
 
-读取的例子...
+#### 读取的例子...
 
 ```js
 function compareUsage(customerID, laterYear, month) {
@@ -284,7 +284,7 @@ class CustomerData {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function getCustomerData() {
@@ -300,7 +300,7 @@ function setRawDataOfCustomers(arg) {
 
 最重要的是妥善处理好那些更新操作。因此，当我查看 getRawDataOfCustomers 的所有调用者时，总是特别关注那些对数据做修改的地方。再提醒你一下，下面是那步更新操作。
 
-更新的例子...
+#### 更新的例子...
 
 ```js
 getRawDataOfCustomers()[customerID].usages[year][month] = amount;
@@ -308,13 +308,13 @@ getRawDataOfCustomers()[customerID].usages[year][month] = amount;
 
 “做法”部分说，接下来要通过一个访问函数来返回原始的顾客数据，如果访问函数还不存在就创建一个。现在顾客类还没有设值函数，而且这个更新操作对结构进行了深入查找，因此是时候创建一个设值函数了。我会先用提炼函数（106），将层层深入数据结构的查找操作提炼到函数里。
 
-更新的例子...
+#### 更新的例子...
 
 ```js
 setUsage(customerID, year, month, amount);
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function setUsage(customerID, year, month, amount) {
@@ -324,13 +324,13 @@ function setUsage(customerID, year, month, amount) {
 
 然后我再用搬移函数（198）将新函数搬移到新的顾客数据类中。
 
-更新的例子...
+#### 更新的例子...
 
 ```js
 getCustomerData().setUsage(customerID, year, month, amount);
 ```
 
-class CustomerData...
+#### class CustomerData...
 
 ```js
   setUsage(customerID, year, month, amount) {
@@ -342,7 +342,7 @@ class CustomerData...
 
 一通替换过后，我可能认为修改已经告一段落，但如何确认替换是否真正完成了呢？检查的办法有很多，比如可以修改 getRawDataOfCustomers 函数，让其返回一份数据的深复制的副本。如果测试覆盖足够全面，那么当我真的遗漏了一些更新点时，测试就会报错。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function getCustomerData() {
@@ -356,7 +356,7 @@ function setRawDataOfCustomers(arg) {
 }
 ```
 
-class CustomerData...
+#### class CustomerData...
 
 ```js
 get rawData() {
@@ -372,7 +372,7 @@ get rawData() {
 
 第一种选择是与设值函数采用同等待遇，把所有对数据的读取提炼成函数，并将它们搬移到 CustomerData 类中。
 
-class CustomerData...
+#### class CustomerData...
 
 ```js
   usage(customerID, year, month) {
@@ -380,7 +380,7 @@ class CustomerData...
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function compareUsage(customerID, laterYear, month) {
@@ -394,7 +394,7 @@ function compareUsage(customerID, laterYear, month) {
 
 如果客户端想拿到一份数据结构，我大可以直接将实际的数据交出去。但这样做的问题在于，我将无从阻止用户直接对数据进行修改，进而使我们封装所有更新操作的良苦用心失去意义。最简单的应对办法是返回原始数据的一份副本，这可以用到我前面写的 rawData 方法。
 
-class CustomerData...
+#### class CustomerData...
 
 ```js
 get rawData() {
@@ -402,7 +402,7 @@ get rawData() {
 }
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function compareUsage(customerID, laterYear, month) {
@@ -470,7 +470,7 @@ class Person {
 
 假设有个人（Person）要去上课。我们用一个简单的 Course 来表示“课程”。
 
-class Person...
+#### class Person...
 
 ```js
   constructor (name) {
@@ -482,7 +482,7 @@ get courses() {return this._courses;}
 set courses(aList) {this._courses = aList;}
 ```
 
-class Course...
+#### class Course...
 
 ```js
   constructor(name, isAdvanced) {
@@ -504,7 +504,7 @@ get isAdvanced() {return this._isAdvanced;}
 
 有些开发者可能觉得这个类已经得到了恰当的封装，毕竟，所有的字段都被访问函数保护到了。但我要指出，对课程列表的封装还不完整。诚然，对列表整体的任何更新操作，都能通过设值函数得到控制。
 
-客户端代码...
+#### 客户端代码...
 
 ```js
   const basicCourseNames = readBasicCourseNames(filename);
@@ -513,7 +513,7 @@ aPerson.courses = basicCourseNames.map(name =&gt; new Course(name, false));
 
 但客户端也可能发现，直接更新课程列表显然更容易。
 
-客户端代码...
+#### 客户端代码...
 
 ```js
 for (const name of readBasicCourseNames(filename)) {
@@ -525,7 +525,7 @@ for (const name of readBasicCourseNames(filename)) {
 
 现在我来对类实施真正恰当的封装，首先要为类添加两个方法，为客户端提供“添加课程”和“移除课程”的接口。
 
-class Person...
+#### class Person...
 
 ```js
   addCourse(aCourse) {
@@ -542,7 +542,7 @@ removeCourse(aCourse, fnIfAbsent = () =&gt; {throw new RangeError();}) {
 
 然后我就可以让直接修改集合值的地方改用新的方法了。
 
-客户端代码...
+#### 客户端代码...
 
 ```js
 for (const name of readBasicCourseNames(filename)) {
@@ -552,7 +552,7 @@ for (const name of readBasicCourseNames(filename)) {
 
 有了单独的添加和移除方法，通常 setCourse 设值函数就没必要存在了。若果真如此，我就会使用移除设值函数（331）移除它。如果出于其他原因，必须提供一个设值方法作为 API，我至少要确保用一份副本给字段赋值，不去修改通过参数传入的集合。
 
-class Person...
+#### class Person...
 
 ```js
   set courses(aList) {this._courses = aList.slice();}
@@ -560,7 +560,7 @@ class Person...
 
 这套设施让客户端能够使用正确的修改方法，同时我还希望能确保所有修改都通过这些方法进行。为达此目的，我会让取值函数返回一份副本。
 
-class Person...
+#### class Person...
 
 ```js
 get courses() {return this._courses.slice();}
@@ -610,7 +610,7 @@ get courses() {return this._courses.slice();}
 
 我将从一个简单的订单（Order）类开始。该类从一个简单的记录结构里读取所需的数据，这其中有一个订单优先级（priority）字段，它是以字符串的形式被读入的。
 
-class Order...
+#### class Order...
 
 ```js
   constructor(data) {
@@ -620,7 +620,7 @@ class Order...
 
 客户端代码有些地方是这么用它的：
 
-客户端...
+#### 客户端...
 
 ```js
   highPriorityCount = orders.filter(o =&gt; "high" === o.priority
@@ -630,7 +630,7 @@ class Order...
 
 无论何时，当我与一个数据值打交道时，第一件事一定是对它使用封装变量（132）。
 
-class Order...
+#### class Order...
 
 ```js
 get priority()        {return this._priority;}
@@ -658,7 +658,7 @@ class Priority {
 
 然后我要修改访问函数，使其用上新创建的类。
 
-class Order...
+#### class Order...
 
 ```js
 get priority()        {return this._priority.toString();}
@@ -667,14 +667,14 @@ set priority(aString) {this._priority = new Priority(aString);}
 
 提炼出 Priority 类后，我发觉现在 Order 类上的取值函数命名有点儿误导人了。它确实还是返回了优先级信息，但却是一个字符串描述，而不是一个 Priority 对象。于是我立即对它应用了函数改名（124）。
 
-class Order...
+#### class Order...
 
 ```js
 get priorityString() {return this._priority.toString();}
 set priority(aString) {this._priority = new Priority(aString);}
 ```
 
-客户端...
+#### 客户端...
 
 ```js
   highPriorityCount = orders.filter(o =&gt; "high" === o.priorityString
@@ -686,7 +686,7 @@ set priority(aString) {this._priority = new Priority(aString);}
 
 到此为止，正式的重构手法就结束了。不过当我进一步查看优先级字段的客户端时，我在想让它们直接使用 Priority 对象是否会更好。于是，我着手在订单类上添加一个取值函数，让它直接返回新建的 Priority 对象。
 
-class Order...
+#### class Order...
 
 ```js
 get priority()        {return this._priority;}
@@ -694,7 +694,7 @@ get priorityString()  {return this._priority.toString();}
 set priority(aString) {this._priority = new Priority(aString);}
 ```
 
-客户端...
+#### 客户端...
 
 ```js
   highPriorityCount = orders.filter(o =&gt; "high" === o.priority.toString()
@@ -704,7 +704,7 @@ set priority(aString) {this._priority = new Priority(aString);}
 
 随着 Priority 对象在别处也有了用处，我开始支持让 Order 类的客户端拿着 Priority 实例来调用设值函数，这可以通过调整 Priority 类的构造函数实现。
 
-class Priority...
+#### class Priority...
 
 ```js
 constructor(value) {
@@ -715,7 +715,7 @@ constructor(value) {
 
 这样做的意义在于，现在新的 Priority 类可以容纳更多业务行为——无论是新的业务代码，还是从别处搬移过来的。这里有些例子，它会校验优先级的传入值，支持一些比较逻辑。
 
-class Priority...
+#### class Priority...
 
 ```js
 constructor(value) {
@@ -738,7 +738,7 @@ lowerThan(other) {return this._index &lt; other._index;}
 
 加上这些行为后，我可以让客户端代码读起来含义更清晰。
 
-客户端...
+#### 客户端...
 
 ```js
   highPriorityCount = orders.filter(o =&gt; o.priority.higherThan(new Priority("normal")))
@@ -799,7 +799,7 @@ else
 
 这里有一个简单的订单类。
 
-class Order...
+#### class Order...
 
 ```js
     constructor(quantity, item) {
@@ -820,7 +820,7 @@ get price() {
 
 先从 basePrice 开始，我先把它声明成 const 并运行测试。这可以很好地防止我遗漏了对变量的其他赋值点——对于这么个小函数是不太可能的，但当我处理更大的函数时就不一定了。
 
-class Order...
+#### class Order...
 
 ```js
    constructor(quantity, item) {
@@ -839,7 +839,7 @@ class Order...
 
 然后我把赋值操作的右边提炼成一个取值函数。
 
-class Order...
+#### class Order...
 
 ```js
 get price() {
@@ -856,7 +856,7 @@ get price() {
 
 测试，然后应用内联变量（123）。
 
-class Order...
+#### class Order...
 
 ```js
 get price() {
@@ -869,7 +869,7 @@ get price() {
 
 接下来我对 discountFactor 重复同样的步骤，先是应用提炼函数（106）。
 
-class Order...
+#### class Order...
 
 ```js
 get price() {
@@ -944,7 +944,7 @@ class TelephoneNumber {
 
 我们从一个简单的 Person 类开始。
 
-class Person...
+#### class Person...
 
 ```js
 get name()   {return this._name;}
@@ -964,7 +964,7 @@ class TelephoneNumber {}
 
 易如反掌！接着，我要在构造 Person 类时创建 TelephoneNumber 类的一个实例。
 
-class Person...
+#### class Person...
 
 ```js
 constructor() {
@@ -972,7 +972,7 @@ constructor() {
 }
 ```
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
 get officeAreaCode()    {return this._officeAreaCode;}
@@ -981,7 +981,7 @@ set officeAreaCode(arg) {this._officeAreaCode = arg;}
 
 现在，我运用搬移字段（207）搬移一个字段。
 
-class Person...
+#### class Person...
 
 ```js
 get officeAreaCode()    {return this._telephoneNumber.officeAreaCode;}
@@ -990,14 +990,14 @@ set officeAreaCode(arg) {this._telephoneNumber.officeAreaCode = arg;}
 
 再次运行测试，然后我对下一个字段进行同样处理。
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
 get officeNumber() {return this._officeNumber;}
 set officeNumber(arg) {this._officeNumber = arg;}
 ```
 
-class Person...
+#### class Person...
 
 ```js
 get officeNumber() {return this._telephoneNumber.officeNumber;}
@@ -1006,13 +1006,13 @@ set officeNumber(arg) {this._telephoneNumber.officeNumber = arg;}
 
 再次测试，然后再搬移对电话号码的取值函数。
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
 get telephoneNumber() {return `(${this.officeAreaCode}) ${this.officeNumber}`;}
 ```
 
-class Person...
+#### class Person...
 
 ```js
 get telephoneNumber() {return this._telephoneNumber.telephoneNumber;}
@@ -1020,7 +1020,7 @@ get telephoneNumber() {return this._telephoneNumber.telephoneNumber;}
 
 现在我需要做些清理工作。“电话号码”显然不该拥有“办公室”（office）的概念，因此我得重命名一下变量。
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
 get areaCode()    {return this._areaCode;}
@@ -1030,7 +1030,7 @@ get number()    {return this._number;}
 set number(arg) {this._number = arg;}
 ```
 
-class Person...
+#### class Person...
 
 ```js
 get officeAreaCode()    {return this._telephoneNumber.areaCode;}
@@ -1041,13 +1041,13 @@ set officeNumber(arg) {this._telephoneNumber.number = arg;}
 
 TelephoneNumber 类上有一个对自己（telephone number）的取值函数也没什么道理，因此我又对它应用函数改名（124）。
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
   toString() {return `(${this.areaCode}) ${this.number}`;}
 ```
 
-class Person...
+#### class Person...
 
 ```js
 get telephoneNumber() {return this._telephoneNumber.toString();}
@@ -1117,7 +1117,7 @@ class TrackingInformation {
 
 它作为 Shipment（物流）类的一部分被使用。
 
-class Shipment...
+#### class Shipment...
 
 ```js
 get trackingInfo() {
@@ -1133,7 +1133,7 @@ TrackingInformation 类过去可能有很多光荣职责，但现在我觉得它
 
 首先，我要寻找 TrackingInformation 类的方法有哪些调用点。
 
-调用方...
+#### 调用方...
 
 ```js
 aShipment.trackingInformation.shippingCompany = request.vendor;
@@ -1141,13 +1141,13 @@ aShipment.trackingInformation.shippingCompany = request.vendor;
 
 我将开始将源类的类似函数全都搬移到 Shipment 里去，但我的做法与做搬移函数（198）时略微有些不同。这里，我先在 Shipment 类里创建一个委托方法，并调整客户端代码，使其调用这个委托方法。
 
-class Shipment...
+#### class Shipment...
 
 ```js
     set shippingCompany(arg) {this._trackingInformation.shippingCompany = arg;}
 ```
 
-调用方...
+#### 调用方...
 
 ```js
 aShipment.trackingInformation.shippingCompany = request.vendor;
@@ -1157,7 +1157,7 @@ aShipment.trackingInformation.shippingCompany = request.vendor;
 
 我先对 display 方法应用内联函数（115）手法。
 
-class Shipment...
+#### class Shipment...
 
 ```js
 get trackingInfo() {
@@ -1176,7 +1176,7 @@ set shippingCompany(arg) {this._trackingInformation._shippingCompany = arg;}
 
 我会继续相同的手法，直到所有搬迁工作完成为止。那时，我就可以删除 TrackingInformation 类了。
 
-class Shipment...
+#### class Shipment...
 
 ```js
 get trackingInfo() {
@@ -1224,7 +1224,7 @@ class Person {
 
 本例从两个类开始，代表“人”的 Person 和代表“部门”的 Department。
 
-class Person...
+#### class Person...
 
 ```js
   constructor(name) {
@@ -1235,7 +1235,7 @@ get department()    {return this._department;}
 set department(arg) {this._department = arg;}
 ```
 
-class Department...
+#### class Department...
 
 ```js
 get chargeCode() {return this._chargeCode;}
@@ -1246,7 +1246,7 @@ set manager(arg) {this._manager = arg;}
 
 有些客户端希望知道某人的经理是谁，为此，它必须先取得 Department 对象。
 
-客户端代码...
+#### 客户端代码...
 
 ```js
 manager = aPerson.department.manager;
@@ -1254,7 +1254,7 @@ manager = aPerson.department.manager;
 
 这样的编码就对客户端揭露了 Department 的工作原理，于是客户知道：Department 负责追踪“经理”这条信息。如果对客户隐藏 Department，可以减少耦合。为了这一目的，我在 Person 中建立一个简单的委托函数。
 
-class Person...
+#### class Person...
 
 ```js
 get manager() {return this._department.manager;}
@@ -1262,8 +1262,11 @@ get manager() {return this._department.manager;}
 
 现在，我得修改 Person 的所有客户端，让它们改用新函数：
 
-客户端代码...
+#### 客户端代码...
+
+```js
 manager = aPerson.department.manager;
+```
 
 只要完成了对 Department 所有函数的修改，并相应修改了 Person 的所有客户端，我就可以移除 Person 中的 department 访问函数了。
 
@@ -1301,19 +1304,19 @@ class Person {
 
 我又要从一个 Person 类开始了，这个类通过维护一个部门对象来决定某人的经理是谁。（如果你一口气读完本书的好几章，可能会发现每个“人与部门”的例子都出奇地相似。）
 
-客户端代码...
+#### 客户端代码...
 
 ```js
 manager = aPerson.manager;
 ```
 
-class Person...
+#### class Person...
 
 ```js
 get manager() {return this._department.manager;}
 ```
 
-class Department...
+#### class Department...
 
 ```js
 get manager() {return this._manager;}
@@ -1321,7 +1324,7 @@ get manager() {return this._manager;}
 
 像这样，使用和封装 Department 都很简单。但如果大量函数都这么做，我就不得不在 Person 之中安置大量委托行为。这就该是移除中间人的时候了。首先在 Person 中建立一个函数，用于获取受托对象。
 
-class Person...
+#### class Person...
 
 ```js
 get department() {return this._department;}
@@ -1329,7 +1332,7 @@ get department() {return this._department;}
 
 然后逐一处理每个客户端，使它们直接通过受托对象完成工作。
 
-客户端代码...
+#### 客户端代码...
 
 ```js
 manager = aPerson.department.manager;
@@ -1341,7 +1344,7 @@ manager = aPerson.department.manager;
 
 如果手边在用自动化的重构工具，那么本手法的步骤有一个实用的变招：我可以先对 department 应用封装变量（132）。这样可让 manager 的取值函数调用 department 的取值函数。
 
-class Person...
+#### class Person...
 
 ```js
 get manager() {return this.department.manager;}

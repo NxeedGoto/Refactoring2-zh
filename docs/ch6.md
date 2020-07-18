@@ -866,7 +866,7 @@ function circumference(radius) {
 
 想象一个管理图书馆的软件，其中有代表“图书”的 Book 类，它可以接受顾客（customer）的预订（reservation）：
 
-class Book...
+#### class Book...
 
 ```js
   addReservation(customer) {
@@ -878,7 +878,7 @@ class Book...
 
 首先，我用提炼函数（106）把 addReservation 的函数体提炼出来，放进一个新函数。这个新函数最终会叫 addReservation，但新旧两个函数不能同时占用这个名字，所以我会先给新函数起一个容易搜索的临时名字。
 
-class Book...
+#### class Book...
 
 ```js
 addReservation(customer) {
@@ -891,7 +891,7 @@ zz_addReservation(customer) {
 
 然后我会在新函数的声明中增加参数，同时修改旧函数中调用新函数的地方（也就是采用简单做法完成这一步）。
 
-class Book...
+#### class Book...
 
 ```js
 addReservation(customer) {
@@ -905,7 +905,7 @@ zz_addReservation(customer, isPriority) {
 
 在修改调用方之前，我喜欢利用 JavaScript 的语言特性先应用引入断言（302），确保调用方一定会用到这个新参数。
 
-class Book...
+#### class Book...
 
 ```js
 zz_addReservation(customer, isPriority) {
@@ -934,7 +934,7 @@ function inNewEngland(aCustomer) {
 
 下面是一个调用该函数的地方：
 
-调用方...
+#### 调用方...
 
 ```js
   const newEnglanders = someCustomers.filter(c =&gt; inNewEngland(c));
@@ -976,7 +976,7 @@ function inNewEngland(aCustomer) {
 
 然后我会用内联函数（115）把旧函数内联到调用处，其效果就是把旧函数的调用处改为调用新函数。我可以每次修改一个调用处。
 
-调用方...
+#### 调用方...
 
 ```js
   const newEnglanders = someCustomers.filter(c =&gt; xxNEWinNewEngland(c.address.state));
@@ -984,13 +984,13 @@ function inNewEngland(aCustomer) {
 
 旧函数被内联到各调用处之后，我就再次使用改变函数声明，把新函数改回旧名字：
 
-调用方...
+#### 调用方...
 
 ```js
   const newEnglanders = someCustomers.filter(c =&gt; inNewEngland(c.address.state));
 ```
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function inNewEngland(stateCode) {
@@ -1093,7 +1093,7 @@ setDefaultOwner({ firstName: "Rebecca", lastName: "Parsons" });
 
 处理完所有使用该变量的代码之后，我就可以限制它的可见性。这一步的用意有两个，一来是检查是否遗漏了变量的引用，二来可以保证以后的代码也不会直接访问该变量。在 JavaScript 中，我可以把变量和访问函数搬移到单独一个文件中，并且只导出访问函数，这样就限制了变量的可见性。
 
-defaultOwner.js...
+#### defaultOwner.js...
 
 ```js
 let defaultOwner = { firstName: "Martin", lastName: "Fowler" };
@@ -1109,7 +1109,7 @@ export function setDefaultOwner(arg) {
 
 我不喜欢给取值函数加上 get 前缀，所以我对这个函数改名。
 
-defaultOwner.js...
+#### defaultOwner.js...
 
 ```js
 let defaultOwnerData = { firstName: "Martin", lastName: "Fowler" };
@@ -1139,7 +1139,7 @@ assert.equal("Parsons", owner1.lastName, "after change owner2"); // is this ok?
 
 这有两个办法可以做到。最简单的办法是禁止对数据结构内部的数值做任何修改。我最喜欢的一种做法是修改取值函数，使其返回该数据的一份副本。
 
-defaultOwner.js...
+#### defaultOwner.js...
 
 ```js
 let defaultOwnerData = { firstName: "Martin", lastName: "Fowler" };
@@ -1466,7 +1466,7 @@ function readingsOutsideRange(station, range) {
 }
 ```
 
-class NumberRange...
+#### class NumberRange...
 
 ```js
   contains(arg) {return (arg &gt;= this.min &amp;&amp; arg &lt;= this.max);}
@@ -1529,7 +1529,7 @@ reading = { customer: "ivan", quantity: 10, month: 5, year: 2017 };
 
 浏览处理这些数据记录的代码，我发现有很多地方在做着相似的计算，于是我找到了一处计算“基础费用”（base charge）的逻辑。
 
-客户端 1...
+#### 客户端 1...
 
 ```js
 const aReading = acquireReading();
@@ -1538,7 +1538,7 @@ const baseCharge = baseRate(aReading.month, aReading.year) * aReading.quantity;
 
 在英格兰，一切生活必需品都得交税，茶自然也不例外。不过，按照规定，只要不超出某个必要用量，就不用交税。
 
-客户端 2...
+#### 客户端 2...
 
 ```js
 const aReading = acquireReading();
@@ -1548,7 +1548,7 @@ const taxableCharge = Math.max(0, base - taxThreshold(aReading.year));
 
 我相信你也发现了：计算基础费用的公式被重复了两遍。如果你跟我有一样的习惯，现在大概已经在着手提炼函数（106）了。有趣的是，好像别人已经动过这个脑筋了。
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const aReading = acquireReading();
@@ -1588,7 +1588,7 @@ class Reading {
 
 首先，我想把手上已有的函数 calculateBaseCharge 搬到新建的 Reading 类中。一得到原始的读数数据，我就用 Reading 类将它包装起来，然后就可以在函数中使用 Reading 类了。
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1598,7 +1598,7 @@ const basicChargeAmount = calculateBaseCharge(aReading);
 
 然后我用搬移函数（198）把 calculateBaseCharge 搬到新类中。
 
-class Reading...
+#### class Reading...
 
 ```js
   get calculateBaseCharge() {
@@ -1606,7 +1606,7 @@ class Reading...
 }
 ```
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1622,7 +1622,7 @@ const basicChargeAmount = aReading.calculateBaseCharge;
 }
 ```
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1634,7 +1634,7 @@ const basicChargeAmount = aReading.baseCharge;
 
 现在我可以修改客户端 1 的代码，令其调用新的方法，不要重复计算基础费用。
 
-客户端 1...
+#### 客户端 1...
 
 ```js
 const rawReading = acquireReading();
@@ -1644,7 +1644,7 @@ const baseCharge = aReading.baseCharge;
 
 很有可能我会顺手用内联变量（123）把 baseCharge 变量给去掉。不过，我们当下介绍的重构手法更关心“计算应税费用”的逻辑。同样，我先将那里的客户端代码改为使用新建的 baseCharge 属性。
 
-客户端 2...
+#### 客户端 2...
 
 ```js
 const rawReading = acquireReading();
@@ -1663,7 +1663,7 @@ function taxableChargeFn(aReading) {
 }
 ```
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1673,7 +1673,7 @@ const taxableCharge = taxableChargeFn(aReading);
 
 然后我运用搬移函数（198）将其移入 Reading 类：
 
-class Reading...
+#### class Reading...
 
 ```js
   get taxableCharge() {
@@ -1681,7 +1681,7 @@ class Reading...
 }
 ```
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1743,7 +1743,7 @@ reading = { customer: "ivan", quantity: 10, month: 5, year: 2017 };
 
 几个不同地方的代码分别根据茶的用量进行计算。一处是计算应该向顾客收取的基本费用。
 
-客户端 1...
+#### 客户端 1...
 
 ```js
 const aReading = acquireReading();
@@ -1752,7 +1752,7 @@ const baseCharge = baseRate(aReading.month, aReading.year) * aReading.quantity;
 
 另一处是计算应该交税的费用—比基本费用要少，因为政府明智地认为，每个市民都有权免税享受一定量的茶水。
 
-客户端 2...
+#### 客户端 2...
 
 ```js
 const aReading = acquireReading();
@@ -1762,7 +1762,7 @@ const taxableCharge = Math.max(0, base - taxThreshold(aReading.year));
 
 浏览处理这些数据记录的代码，我发现有很多地方在做着相似的计算。这样的重复代码，一旦需要修改（我打赌这只是早晚的问题），就会造成麻烦。我可以用提炼函数（106）来处理这些重复的计算逻辑，但这样提炼出来的函数会散落在程序中，以后的程序员还是很难找到。说真的，我还真在另一块代码中找到了一个这样的函数。
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const aReading = acquireReading();
@@ -1790,7 +1790,7 @@ function enrichReading(original) {
 
 然后我挑选一处想要搬移的计算逻辑。首先，我用现在的 enrichReading 函数来增强“读数”记录，尽管该函数暂时还什么都没做。
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1812,7 +1812,7 @@ function enrichReading(original) {
 
 修改客户端代码，令其改用增强后的字段：
 
-客户端 3...
+#### 客户端 3...
 
 ```js
 const rawReading = acquireReading();
@@ -1835,7 +1835,7 @@ it("check reading unchanged", function () {
 
 现在我可以修改客户端 1 的代码，让它也使用这个新添的字段。
 
-客户端 1...
+#### 客户端 1...
 
 ```js
 const rawReading = acquireReading();

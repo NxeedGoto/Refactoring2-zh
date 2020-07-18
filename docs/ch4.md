@@ -48,7 +48,7 @@ Kent Beck 将这种先写测试的习惯提炼成一门技艺，叫测试驱动�
 
 下面的代码能从 JSON 文件中构造出一个行省对象。
 
-class Province...
+#### class Province...
 
 ```js
 constructor(doc) {
@@ -67,7 +67,7 @@ addProducer(arg) {
 
 下面的函数会创建可用的 JSON 数据，我可以用它的返回值来构造一个行省对象，并拿这个对象来做测试。
 
-顶层作用域...
+#### 顶层作用域...
 
 ```js
 function sampleProvinceData() {
@@ -86,7 +86,7 @@ function sampleProvinceData() {
 
 行省类中有许多设值函数和取值函数，它们用于获取各类数据的值。
 
-class Province...
+#### class Province...
 
 ```js
 get name()    {return this._name;}
@@ -103,7 +103,7 @@ set price(arg) {this._price = parseInt(arg);}
 
 代表生产商的 Producer 类则基本只是一个存放数据的容器。
 
-class Producer...
+#### class Producer...
 
 ```js
 constructor(aProvince, data) {
@@ -129,7 +129,7 @@ set production(amountStr) {
 
 缺额的计算逻辑也很简单。
 
-class Province...
+#### class Province...
 
 ```js
 get shortfall() {
@@ -139,7 +139,7 @@ get shortfall() {
 
 计算利润的逻辑则要相对复杂一些。
 
-class Province...
+#### class Province...
 
 ```js
 get profit() {
@@ -202,7 +202,7 @@ Mocha 框架组织测试代码的方式是将其分组，每一组下包含一�
 总是确保测试不该通过时真的会失败。
 :::
 
-class Province...
+#### class Province...
 
 ```js
 get shortfall() {
