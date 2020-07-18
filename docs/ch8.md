@@ -12,14 +12,14 @@
 
   曾用名：搬移函数（Move Method）
 
-  
+  ```js
   class Account {
  get overdraftCharge() {...}
 
   
   class AccountType {
     get overdraftCharge() {...}
-
+```
   动机
 
   模块化是优秀软件设计的核心所在，好的模块化能够让我在修改程序时只需理解程序的一小部分。为了设计出高度模块化的程序，我得保证互相关联的软件要素都能集中到一块，并确保块与块之间的联系易于查找、直观易懂。同时，我对模块设计的理解并不是一成不变的，随着我对代码的理解加深，我会知道那些软件要素如何组织最为恰当。要将这种理解反映到代码上，就得不断地搬移这些元素。
@@ -81,6 +81,7 @@
   范例：搬移内嵌函数至顶层
 
   让我用一个函数来举例。这个函数会计算一条GPS轨迹记录（track record）的总距离（total distance）。
+```js
   function trackSummary(points) { 
  const totalTime = calculateTime();
  const totalDistance = calculateDistance(); 
@@ -104,10 +105,11 @@
  function calculateTime() { ... }
 
 }
-
+```
   我希望把calculateDistance函数搬移到顶层，这样我就能单独计算轨迹的距离，而不必算出汇总报告（summary）的其他部分。
 
   我先将函数复制一份到顶层作用域中：
+```js
   function trackSummary(points) { 
  const totalTime = calculateTime();
  const totalDistance = calculateDistance(); 
@@ -139,10 +141,11 @@
   }
   return result;
  }
-
+```
   复制函数时，我习惯为函数一并改个名，这样可让“它们有不同的作用域”这个信息显得一目了然。现在我还不想花费心思考虑它正确的名字该是什么，因此我暂且先用一个临时的名字。
 
   此时代码依然能正常工作，但我的静态分析器要开始抱怨了，它说新函数里多了两个未定义的符号，分别是distance和points。对于points，自然是将其作为函数参数传进来。
+```js
   function top_calculateDistance(points) {
  let result =0;
  for (let i = 1; i &lt; points.length; i++) { 
@@ -150,10 +153,11 @@
  }
  return result;
 }
-
+```
   至于distance，虽然我也可以将它作为参数传进来，但也许将其计算函数calculate Distance一并搬移过来会更合适。该函数的代码如下。
 
   function trackSummary...
+```js
   function distance(p1,p2) {
  const EARTH_RADIUS = 3959; // in miles
  const dLat = radians(p2.lat) - radians(p1.lat); 
@@ -168,8 +172,9 @@
 function radians(degrees) { 
  return degrees * Math.PI / 180;
 }
-
+```
   我留意到distance函数中只调用了radians函数，后者已经没有再引用当前上下文里的任何元素。因此与其将radians作为参数，我更倾向于将它也一并搬移。不过我不需要一步到位，我们可以先将这两个函数从当前上下文中搬移进calculateDistance函数里：
+```js
   function trackSummary(points) {
  const totalTime = calculateTime();
  const totalDistance = calculateDistance(); 
@@ -191,8 +196,9 @@ function radians(degrees) {
   function radians(degrees) { ... }
 
 }
-
+```
   这样做的好处是，我可以充分发挥静态检查和测试的作用，让它们帮我检查有无遗漏的东西。在这个实例中一切顺利，因此，我可以放心地将这两个函数直接复制到top_calculateDistance中：
+```js
   function top_calculateDistance(points) {
  let result = 0;
  for (let i = 1; i &lt; points.length; i++) { 
@@ -204,10 +210,11 @@ function radians(degrees) {
  function radians(degrees) { ... }
 
 }
-
+```
   这次复制操作同样不会改变程序现有行为，但给了静态分析器更多介入的机会，增加了暴露错误的概率。假如我在上一步没有发现distance函数内部还调用了radians函数，那么这一步就会被分析器检查出来。
 
   现在万事俱备，是时候端出主菜了——我要在原calculateDistance函数体内调用top_calculateDistance函数：
+```js
   function trackSummary(points) {
  const totalTime = calculateTime();
  const totalDistance = calculateDistance(); 
@@ -221,10 +228,11 @@ function radians(degrees) {
  function calculateDistance() {
   return top_calculateDistance(points);
  }
-
+```
   接下来最重要的事是要运行一遍测试，看看功能是否仍然完整，函数在其新家待得是否舒适。
 
   测试通过后，便算完成了主要任务，就好比搬家，现在大箱小箱已经全搬到新家，接下来就是将它们拆箱复位了。第一件事是决定还要不要保留原来那个只起委托作用的函数。在这个例子中，原函数的调用点不多，作为嵌套函数它们的作用范围通常也很小，因此我觉得这里大可直接移除原函数。
+```js
   function trackSummary(points) { 
  const totalTime = calculateTime();
  const totalDistance = top_calculateDistance(points); 
@@ -235,8 +243,9 @@ function radians(degrees) {
   pace: pace
  };
 }
-
+```
   同时，也该是时候为这个函数认真想个名字了。因为顶层函数拥有最高的可见性，因此取个好名非常重要。totalDistance听起来不错，但还不能马上用这个名字，因为trackSummary函数中有一个同名的变量——我不觉得这个变量有保留的价值，因此我们先用内联变量（123）处理它，之后再使用改变函数声明（124）：
+```js
   function trackSummary(points) { 
  const totalTime = calculateTime();
  const pace = totalTime / 60 / totalDistance(points) ;
@@ -253,15 +262,16 @@ function totalDistance(points) {
  }
  return result;
 }
-
+```
   如果出于某些原因，实在需要保留该变量，那么我建议将该变量改个其他的名字，比如totalDistanceCache或distance等。
 
   由于distance函数和radians函数并未使用totalDistance中的任何变量或函数，因此我倾向于把它们也提升到顶层，也就是4个方法都放置在顶层作用域上。
+```js
   function trackSummary(points) { ... } 
 function totalDistance(points) { ... } 
 function distance(p1,p2) { ... } 
 function radians(degrees) { ... }
-
+```
   有些人则更倾向于将distance和radians函数保留在totalDistance内，以便限制它们的可见性。在某些语言里，这个顾虑也许有其道理，但新的ES 2015规范为JavaScript提供了一个美妙的模块化机制，利用它来控制函数的可见性是再好不过了。通常来说，我对嵌套函数还是心存警惕的，因为很容易在里面编写一些私有数据，并且在函数之间共享，这可能会增加代码的阅读和重构难度。
 
   范例：在类之间搬移函数
@@ -269,6 +279,7 @@ function radians(degrees) { ... }
   在类之间搬移函数也是一种常见场景，下面我将用一个表示“账户”的Account类来讲解。
 
   class Account...
+```js
   get bankCharge() { 
  let result = 4.5;
  if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge;
@@ -286,7 +297,7 @@ get overdraftCharge() {
  else
   return this.daysOverdrawn * 1.75;
 }
-
+```
   上面的代码会根据账户类型（account type）的不同，决定不同的“透支金额计费”算法。因此，很自然会想到将overdraftCharge函数搬移到AccountType类去。
 
   第一步要做的是：观察被overdraftCharge使用的每一项特性，考虑是否值得将它们与overdraftCharge函数一起移动。此例中我需要让daysOverdrawn字段留在Account类中，因为它会随不同种类的账户而变化。
@@ -294,6 +305,7 @@ get overdraftCharge() {
   然后，我将overdraftCharge函数主体复制到AccountType类中，并做相应调整。
 
   class AccountType...
+```js
   overdraftCharge(daysOverdrawn) {
  if (this.isPremium) {
   const baseCharge  =  10; 
@@ -305,12 +317,13 @@ get overdraftCharge() {
  else
   return daysOverdrawn * 1.75;
 }
-
+```
   为了使函数适应这个新家，我必须决定如何处理两个作用范围发生改变的变量。isPremium如今只需要简单地从this上获取，但daysOverdrawn怎么办呢？我是直接传值，还是把整个account对象传过来？为了方便，我选择先简单传一个值，不过如果后续还需要账户（account）对象上除了daysOverdrawn以外的更多数据，例如需要根据账户类型（account type）来决定如何从账户（account）对象上取用数据时，那么我很可能会改变主意，转而选择传入整个account对象。
 
   完成函数复制后，我会将原来的方法代之以一个委托调用。
 
   class Account...
+```js
   get bankCharge() { 
  let result = 4.5;
  if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge; 
@@ -320,20 +333,22 @@ get overdraftCharge() {
 get overdraftCharge() {
  return this.type.overdraftCharge(this.daysOverdrawn);
 }
-
+```
   然后下一件需要决定的事情是，是保留overdraftCharge这个委托函数，还是直接内联它？内联的话，代码会变成下面这样。
 
   class Account...
+```js
   get bankCharge() {
  let result = 4.5;
  if (this._daysOverdrawn &gt; 0)
   result += this.type.overdraftCharge(this.daysOverdrawn);
  return result;
 }
-
+```
   在早先的步骤中，我将daysOverdrawn作为参数直接传递给overdraftCharge函数，但如若账户（account）对象上有很多数据需要传递，那我就比较倾向于直接将整个对象作为参数传递过去：
 
   class Account...
+```js
   get bankCharge() {
  let result = 4.5;
  if (this._daysOverdrawn &gt; 0) result += this.overdraftCharge; 
@@ -343,8 +358,9 @@ get overdraftCharge() {
 get overdraftCharge() {
  return this.type.overdraftCharge(this);
 }
-
+```
   class AccountType…
+```js
   overdraftCharge(account) {
  if (this.isPremium) {
   const baseCharge = 10;
@@ -356,10 +372,10 @@ get overdraftCharge() {
  else
   return account.daysOverdrawn * 1.75;
 }
-
+```
 ##  8.2 搬移字段（Move Field）
 
-  
+```js
   class Customer {
   get plan() {return this._plan;}
   get discountRate() {return this._discountRate;}
@@ -368,7 +384,7 @@ get overdraftCharge() {
   class Customer {
   get plan() {return this._plan;}
   get discountRate() {return this.plan.discountRate;}
-
+```
   动机
 
   编程活动中你需要编写许多代码，为系统实现特定的行为，但往往数据结构才是一个健壮程序的根基。一个适应于问题域的良好数据结构，可以让行为代码变得简单明了，而一个糟糕的数据结构则将招致许多无用代码，这些代码更多是在差劲的数据结构中间纠缠不清，而非为系统实现有用的行为。代码凌乱，势必难以理解；不仅如此，坏的数据结构本身也会掩藏程序的真实意图。
@@ -422,6 +438,7 @@ get overdraftCharge() {
   我将用下面这个例子来介绍这项手法，其中Customer类代表了一位“顾客”，CustomerContract代表与顾客关联的一个“合同”。
 
   class Customer...
+```js
   constructor(name, discountRate) {
  this._name = name; 
  this._discountRate = discountRate;
@@ -435,17 +452,19 @@ becomePreferred() {
 applyDiscount(amount) {
  return amount.subtract(amount.multiply(this._discountRate));
 }
-
+```
   class CustomerContract...
+```js
   constructor(startDate) {
   this._startDate = startDate;
 }
-
+```
   我想要将折扣率（discountRate）字段从Customer类中搬移到CustomerContract里中。
 
   第一件事情是先用封装变量（132）将对_discountRate字段的访问封装起来。
 
   class Customer...
+```js
   constructor(name, discountRate) {
  this._name = name; 
  this._setDiscountRate(discountRate);
@@ -460,34 +479,37 @@ becomePreferred() {
 applyDiscount(amount)  {
  return amount.subtract(amount.multiply(this.discountRate));
 }
-
+```
   我通过定制的applyDiscount方法来更新字段，而不是使用通常的设值函数，这是因为我不想为字段暴露一个public的设值函数。
 
   接着我在CustomerContract中添加一个对应的字段和访问函数。
 
   class CustomerContract...
+```js
   constructor(startDate, discountRate) {
  this._startDate = startDate; 
  this._discountRate = discountRate;
 }
 get discountRate()  {return this._discountRate;} 
 set discountRate(arg) {this._discountRate = arg;}
-
+```
   接下来，我可以修改customer对象的访问函数，让它引用CustomerContract这个新添的字段。不过当我这么干时，我收到了一个错误：“Cannot set property 'discountRate' of undefined”。这是因为我们先调用了_setDiscountRate函数，而此时CustomerContract对象尚未创建出来。为了修复这个错误，我得先撤销刚刚的代码，回到上一个可工作的状态，然后再应用移动语句（223）手法，将_setDiscountRate函数调用语句挪动到创建对象的语句之后。
 
   class Customer...
+```js
   constructor(name, discountRate) {
   this._name = name; 
   this._setDiscountRate(discountRate);
   this._contract = new CustomerContract(dateToday());
 }
-
+```
   搬移完语句后运行一下测试。测试通过后，再次修改Customer的访问函数，让它使用_contract对象上的discountRate字段。
 
   class Customer...
+```js
   get discountRate() {return this._contract.discountRate;}
 _setDiscountRate(aNumber) {this._contract.discountRate = aNumber;}
-
+```
   在JavaScript中，使用类的字段无须事先声明，因此替换完访问函数，实际上已经没有其他字段再需要我删除。
 
   搬移裸记录
@@ -501,6 +523,7 @@ _setDiscountRate(aNumber) {this._contract.discountRate = aNumber;}
   现在，让我们看另外一个场景。还是那个代表“账户”的Account类，类上有一个代表“利率”的字段_interestRate。
 
   class Account...
+```js
   constructor(number, type, interestRate) {
  this._number = number;
  this._type = type; 
@@ -512,21 +535,23 @@ get interestRate() {return this._interestRate;}
   constructor(nameString) {
   this._name = nameString;
 }
-
+```
   我不希望让每个账户自己维护一个利率字段，利率应该取决于账户本身的类型，因此我想将它搬移到AccountType中去。
 
   利率字段已经通过访问函数得到了良好的封装，因此我只需要在AccountType上创建对应的字段及访问函数即可。
 
   class AccountType...
+```js
   constructor(nameString, interestRate) {
   this._name = nameString; 
   this._interestRate = interestRate;
 }
 get interestRate() {return this._interestRate;}
-
+```
   接着我应该着手替换Account类的访问函数，但我发现直接替换可能有个潜藏的问题。在重构之前，每个账户都自己维护一份利率数据，而现在我要让所有相同类型的账户共享同一个利率值。如果当前类型相同的账户确实拥有相同的利率，那么这次重构就能成立，因为这不会引起可观测的行为变化。但只要存在一个特例，即同一类型的账户可能有不同的利率值，那么这样的修改就不叫重构了，因为它会改变系统的可观测行为。倘若账户的数据保存在数据库中，那我就应该检查一下数据库，确保同一类型的账户都拥有与其账户类型匹配的利率值。同时，我还可以在Account类引入断言（302），确保出现异常的利率数据时能够及时发现。
 
   class Account...
+```js
   constructor(number, type, interestRate) {
   this._number = number;
   this._type = type;
@@ -534,21 +559,22 @@ get interestRate() {return this._interestRate;}
   this._interestRate = interestRate;
 }
 get interestRate() {return this._interestRate;}
-
+```
   我会保留这条断言，让系统先运行一段时间，看看是否会在这捕获到错误。或者，除了添加断言，我还可以将错误记录到日志里。一段时间后，一旦我对代码变得更加自信，确定它确实没有引起行为变化后，我就可以让Account直接访问AccountType上的interestRate字段，并将原来的字段完全删除了。
 
   class Account...
+```js
   constructor(number, type) {
   this._number = number;
   this._type = type;
 }
 get interestRate() {return this._type.interestRate;}
-
+```
 ##  8.3 搬移语句到函数（Move Statements into Function）
 
   反向重构：搬移语句到调用者（217）
 
-  
+```js
   result.push(`&lt;p&gt;title: ${person.photo.title}&lt;/p&gt;`); 
 result.concat(photoData(person.photo));
 
@@ -569,7 +595,7 @@ function photoData(aPhoto) {
   `&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
  ];
 }
-
+```
   动机
 
   要维护代码库的健康发展，需要遵守几条黄金守则，其中最重要的一条当属“消除重复”。如果我发现调用某个函数时，总有一些相同的代码也需要每次执行，那么我会考虑将此段代码合并到函数里头。这样，日后对这段代码的修改只需改一处地方，还能对所有调用者同时生效。如果将来代码对不同的调用者需有不同的行为，那时再通过搬移语句到调用者（217）将它（或其一部分）搬移出来也十分简单。
@@ -599,6 +625,7 @@ function photoData(aPhoto) {
   范例
 
   我将用一个例子来讲解这项手法。以下代码会生成一些关于相片（photo）的HTML：
+```js
   function renderPerson(outStream, person) {
  const result = [];
  result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`);
@@ -622,10 +649,11 @@ function emitPhotoData(aPhoto) {
  result.push(`&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`); 
  return result.join("\n");
 }
-
+```
   这个例子中的emitPhotoData函数有两个调用点，每个调用点的前面都有一行类似的重复代码，用于打印与标题（title）相关的信息。我希望能消除重复，把打印标题的那行代码搬移到emitPhotoData函数里去。如果emitPhotoData只有一个调用点，那我大可直接把代码复制并粘贴过去就完事，但若调用点不止一个，那我就更倾向于用更安全的手法小步前进。
 
   我先选择其中一个调用点，对其应用提炼函数（106）。除了我想搬移的语句，我还把emitPhotoData函数也一起提炼到新函数中。
+```js
   function photoDiv(p) { 
  return [
   "&lt;div&gt;",
@@ -640,8 +668,9 @@ function zznew(p) {
   emitPhotoData(p),
  ].join("\n");
 }
-
+```
   完成提炼后，我会逐一查看emitPhotoData的其他调用点，找到该函数与其前面的重复语句，一并换成对新函数的调用。
+```js
   function renderPerson(outStream, person) {
  const result = []; 
  result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`); 
@@ -649,8 +678,9 @@ function zznew(p) {
  result.push(zznew(person.photo));
  return  result.join("\n");
 }
-
+```
   替换完emitPhotoData函数的所有调用点后，我紧接着应用内联函数（115）将emitPhotoData函数内联到新函数中。
+```js
   function zznew(p) { 
  return [
   `&lt;p&gt;title: ${p.title}&lt;/p&gt;`,
@@ -658,8 +688,9 @@ function zznew(p) {
   `&lt;p&gt;date: ${p.date.toDateString()}&lt;/p&gt;`,
  ].join("\n");
 }
-
+```
   最后，再对新提炼的函数应用函数改名（124），就大功告成了。
+```js
   function renderPerson(outStream, person) {
  const result = []; 
  result.push(`&lt;p&gt;${person.name}&lt;/p&gt;`); 
@@ -683,14 +714,14 @@ function emitPhotoData(aPhoto) {
   `&lt;p&gt;date: ${aPhoto.date.toDateString()}&lt;/p&gt;`,
  ].join("\n");
 }
-
+```
   同时我会记得调整函数参数的命名，使之与我的编程风格保持一致。
 
  ## 8.4 搬移语句到调用者（Move Statements to Callers）
 
   反向重构：搬移语句到函数（213）
 
-  
+```js
   emitPhotoData(outStream, person.photo); 
 
 function  emitPhotoData(outStream, photo) {
@@ -705,7 +736,7 @@ outStream.write(`&lt;p&gt;location: ${person.photo.location}&lt;/p&gt;\n`);
 function emitPhotoData(outStream, photo) {
  outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
 }
-
+```
   动机
 
   作为程序员，我们的职责就是设计出结构一致、抽象合宜的程序，而程序抽象能力的源泉正是来自函数。与其他抽象机制的设计一样，我们并非总能平衡好抽象的边界。随着系统能力发生演进（通常只要是有用的系统，功能都会演进），原先设定的抽象边界总会悄无声息地发生偏移。对于函数来说，这样的边界偏移意味着曾经视为一个整体、一个单元的行为，如今可能已经分化出两个甚至是多个不同的关注点。
@@ -737,6 +768,7 @@ function emitPhotoData(outStream, photo) {
   范例
 
   下面这个例子比较简单：emitPhotoData是一个函数，在两处地方被调用。
+```js
   function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
  renderPhoto(outStream, person.photo); 
@@ -758,12 +790,13 @@ function emitPhotoData(outStream, photo) {
  outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`); 
  outStream.write(`&lt;p&gt;location: ${photo.location}&lt;/p&gt;\n`);
 }
-
+```
   我需要修改软件，支持listRecentPhotos函数以不同方式渲染相片的location信息，而renderPerson的行为则保持不变。为了使这次修改更容易进行，我要应用本手法，将emitPhotoData函数最后的那行代码搬移到其调用端。
 
   一般来说，像这样简单的场景，我都会直接将emitPhotoData的最后一行剪切并粘贴到两个调用它的函数后面。但为了演示这项重构手法如何在更复杂的场景下运作，这里我还是遵从更详细也更安全的步骤。
 
   重构的第一步是先用提炼函数（106），将那些最终希望留在emitPhotoData函数里的语句先提炼出去。
+```js
   function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`); 
  renderPhoto(outStream, person.photo); 
@@ -789,10 +822,11 @@ function zztmp(outStream, photo) {
  outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
  outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
-
+```
   新提炼出来的函数一般只会短暂存在，因此我在命名上不需要太认真，不过，取个容易搜索的名字会很有帮助。提炼完成后运行一下测试，确保提炼出来的新函数能正常工作。
 
   接下来，我要对emitPhotoData的调用点逐一应用内联函数（115）。先从renderPerson函数开始。
+```js
   function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
  renderPhoto(outStream, person.photo); 
@@ -818,8 +852,9 @@ function zztmp(outStream, photo) {
  outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
  outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
-
+```
   然后再次运行测试，确保这次函数内联能正常工作。测试通过后，再前往下一个调用点。
+```js
   function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
  renderPhoto(outStream, person.photo); 
@@ -847,8 +882,9 @@ function zztmp(outStream, photo) {
  outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
  outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
-
+```
   至此，我就可以移除外面的emitPhotoData函数，完成内联函数（115）手法。
+```js
   function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`); 
  renderPhoto(outStream, person.photo); 
@@ -876,8 +912,9 @@ function zztmp(outStream, photo) {
  outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`);
  outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
-
+```
   最后，我将zztmp改名为原函数的名字emitPhotoData，完成本次重构。
+```js
   function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
  renderPhoto(outStream, person.photo); 
@@ -900,10 +937,10 @@ function emitPhotoData(outStream, photo) {
  outStream.write(`&lt;p&gt;title: ${photo.title}&lt;/p&gt;\n`); 
  outStream.write(`&lt;p&gt;date: ${photo.date.toDateString()}&lt;/p&gt;\n`);
 }
-
+```
  ## 8.5 以函数调用取代内联代码（Replace Inline Code with Function Call）
 
-  
+```js
   let appliesToMass = false; 
 for(const s of states) {
   if (s === "MA") appliesToMass = true;
@@ -911,7 +948,7 @@ for(const s of states) {
 
   
   appliesToMass = states.includes("MA");
-
+```
   动机
 
   善用函数可以帮助我将相关的行为打包起来，这对于提升代码的表达力大有裨益—— 一个命名良好的函数，本身就能极好地解释代码的用途，使读者不必了解其细节。函数同样有助于消除重复，因为同一段代码我不需要编写两次，每次调用一下函数即可。此外，当我需要修改函数的内部实现时，也不需要四处寻找有没有漏改的相似代码。（当然，我可能需要检查函数的所有调用点，判断它们是否都应该使用新的实现，但通常很少需要这么仔细，即便需要，也总好过四处寻找相似代码。）
@@ -932,7 +969,7 @@ for(const s of states) {
 
   曾用名：合并重复的代码片段（Consolidate Duplicate Conditional Fragments）
 
-  
+```js
   const pricingPlan = retrievePricingPlan(); 
 const order = retreiveOrder();
 let charge;
@@ -943,7 +980,7 @@ const chargePerUnit = pricingPlan.unit;
 const chargePerUnit = pricingPlan.unit; 
 const order = retreiveOrder();
 let charge;
-
+```
   动机
 
   让存在关联的东西一起出现，可以使代码更容易理解。如果有几行代码取用了同一个数据结构，那么最好是让它们在一起出现，而不是夹杂在取用其他数据结构的代码中间。最简单的情况下，我只需使用移动语句就可以让它们聚集起来。此外还有一种常见的“关联”，就是关于变量的声明和使用。有人喜欢在函数顶部一口气声明函数用到的所有变量，我个人则喜欢在第一次需要使用变量的地方再声明它。
@@ -975,6 +1012,7 @@ let charge;
   确定要把代码移动到哪里之后，我就需要思考第二个问题，也就是此次搬移能否做到的问题。为此我需要观察待移动的代码，以及移动中间经过的代码段，我得思考这个问题：如果我把代码移动过去，执行次序的不同会不会使代码之间产生干扰，甚至于改变程序的可观测行为？
 
   请观察以下代码片段：
+```js
    1 const pricingPlan = retrievePricingPlan(); 
  2 const order = retreiveOrder();
  3 const baseCharge = pricingPlan.base; 
@@ -988,7 +1026,7 @@ let charge;
 11 if (order.isRepeat) discount += 20; 
 12 charge = charge - discount;
 13 chargeOrder(charge);
-
+```
   前七行是变量的声明语句，移动它们通常很简单。假如我想把与处理折扣（discount）相关的代码搬移到一起，那么我可以直接将第7行（let discount）移动到第10行上面（discount = ...那一行）。因为变量声明没有副作用，也不会引用其他变量，所以我可以很安全地将声明语句往后移动，一直移动到引用discount变量的语句之上。此种类型的语句移动也十分常见——当我要提炼函数（106）时，通常得先将相关变量的声明语句搬移过来。
 
   我会再寻找类似的没有副作用的变量声明语句。类似地，我可以毫无障碍地把声明了order变量的第2行（const order = ...）移动到使用它的第6行（const units = ...）上面。
@@ -1000,9 +1038,10 @@ let charge;
   如果待移动的代码片段本身有副作用，或者它需要跨越的代码存在副作用，移动它们时就必须加倍小心。我得仔细寻找两个代码片段中间的代码有没有副作用，是不是对执行次序敏感。因此，假设我想将第11行（if(order.isRepeat)...）挪动到段落底部，我会发现行不通，因为中间第12行语句引用了discount变量，而我在第11行中可能改动这个变量；类似地，假设我想将第13行（chargeOrder(charge)）往上搬移，那也是行不通的，因为第13行引用的charge变量在第12行会被修改。不过，如果我想将第8行代码（charge = baseCharge + ...）移动到第9行到第11行中间的任意地方则是可行的，因为这几行都未修改任何变量的状态。
 
   移动代码时，最容易遵守的一条规则是，如果待移动代码片段中引用的变量在另一个代码片段中被修改了，那我就不能安全地将前者移动到后者之后；同样，如果前者会修改后者中引用的变量，也一样不能安全地进行上述移动。但这条规则仅仅作为参考，它也不是绝对的，比如下面这个例子，虽然两个语句都修改了彼此之间的变量，但我仍能安全地调整它们的先后顺序。
+```js
   a = a + 10;
 a = a + 5;
-
+```
   但无论如何，要判断一次语句移动是否安全，都意味着我得真正理解代码的工作原理，以及运算符之间的组合方式等。
 
   正因此项重构如此需要关注状态更新，所以我会尽量移除那些会更新元素状态的代码。比如此例中的charge变量，在移动其相关的代码之前，我会先看看是否能对它应用拆分变量（240）手法。
@@ -1016,6 +1055,7 @@ a = a + 5;
   对于拥有条件逻辑的代码，移动手法同样适用。当从条件分支中移走代码时，通常是要消除重复逻辑；将代码移入条件分支时，通常是反过来，有意添加一些重复逻辑。
 
   在下面这个例子中，两个条件分支里都有一个相同的语句：
+```js
   let result;
 if (availableResources.length === 0) {
  result = createResource(); 
@@ -1025,8 +1065,9 @@ if (availableResources.length === 0) {
  allocatedResources.push(result);
 }
 return result;
-
+```
   我可以将这两句重复代码从条件分支中移走，只在if-else块的末尾保留一句。
+```js
   let result;
 if (availableResources.length === 0) {
  result = createResource();
@@ -1035,7 +1076,7 @@ if (availableResources.length === 0) {
 }
 allocatedResources.push(result);
 return result;
-
+```
   这个手法同样可以反过来用，也就是把一个语句分别搬移到不同的条件分支里，这样会在每个条件分支里留下同一段重复的代码。
 
   延伸阅读
@@ -1046,7 +1087,7 @@ return result;
 
  ## 8.7 拆分循环（Split Loop）
 
-  
+```js
   let averageAge = 0;
 let totalSalary = 0;
 for (const p of people) {
@@ -1066,7 +1107,7 @@ for (const p of people) {
  averageAge += p.age;
 }
 averageAge = averageAge / people.length;
-
+```
   动机
 
   你常常能见到一些身兼多职的循环，它们一次做了两三件事情，不为别的，就因为这样可以只循环一次。但如果你在一次循环中做了两件不同的事，那么每当需要修改循环时，你都得同时理解这两件事情。如果能够将循环拆分，让一个循环只做一件事情，那就能确保每次修改时你只需要理解要修改的那块代码的行为就可以了。
@@ -1090,6 +1131,7 @@ averageAge = averageAge / people.length;
   范例
 
   下面我以一段循环代码开始。该循环会计算需要支付给所有员工的总薪水（total salary），并计算出最年轻（youngest）员工的年龄。
+```js
   let youngest = people[0] ? people[0].age : Infinity; 
 let totalSalary = 0;
 for (const p of people) {
@@ -1098,8 +1140,9 @@ for (const p of people) {
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
-
+```
   该循环十分简单，但仍然做了两种不同的计算。要拆分这两种计算，我要先复制一遍循环代码。
+```js
   let youngest = people[0] ? people[0].age : Infinity; 
 let totalSalary = 0;
 for (const p of people) {
@@ -1112,8 +1155,9 @@ for (const p of people) {
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
-
+```
   复制过后，我需要将循环中重复的计算逻辑删除，否则就会累加出错误的结果。如果循环中的代码没有副作用，那便可以先留着它们不删除，可惜上述例子并不符合这种情况。
+```js
   let youngest = people[0] ? people[0].age : Infinity; 
 let totalSalary = 0;
 for (const p of people) {
@@ -1127,8 +1171,9 @@ for (const p of people) {
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
-
+```
   至此，拆分循环这个手法本身的内容就结束了。但本手法的意义不仅在于拆分出循环本身，而且在于它为进一步优化提供了良好的起点——下一步我通常会寻求将每个循环提炼到独立的函数中。在做提炼之前，我得先用移动语句（223）微调一下代码顺序，将与循环相关的变量先搬移到一起：
+```js
   let totalSalary = 0;
 for (const p of people) {
  totalSalary += p.salary;
@@ -1140,8 +1185,9 @@ for (const p of people) {
 }
 
 return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
-
+```
   然后，我就可以顺利地应用提炼函数（106）了。
+```js
   return `youngestAge: ${youngestAge()}, totalSalary: ${totalSalary()}`;
 
 function totalSalary() {
@@ -1159,8 +1205,9 @@ function youngestAge() {
  }
  return youngest;
 }
-
+```
   对于像totalSalary这样的累加计算，我绝少能抵挡得住进一步使用以管道取代循环（231）重构它的诱惑；而对于youngestAge的计算，显然可以用替换算法（195）替之以更好的算法。
+```js
   return `youngestAge: ${youngestAge()}, totalSalary: ${totalSalary()}`; 
 
 function totalSalary() {
@@ -1169,10 +1216,10 @@ function totalSalary() {
 function youngestAge() {
  return Math.min(...people.map(p =&gt; p.age));
 }
-
+```
 ##  8.8 以管道取代循环（Replace Loop with Pipeline）
 
-  
+```js
   const names = [];
 for (const i of input) {
   if (i.job === "programmer") 
@@ -1184,7 +1231,7 @@ for (const i of input) {
   .filter(i =&gt; i.job === "programmer")
   .map(i =&gt; i.name)
 ;
-
+```
   动机
 
   与大多数程序员一样，我入行的时候也有人告诉我，迭代一组集合时得使用循环。不过时代在发展，如今越来越多的编程语言都提供了更好的语言结构来处理迭代过程，这种结构就叫作集合管道（collection pipeline）。集合管道[mf-cp]是这样一种技术，它允许我使用一组运算来描述集合的迭代过程，其中每种运算接收的入参和返回值都是一个集合。这类运算有很多种，最常见的则非map和filter莫属：map运算是指用一个函数作用于输入集合的每一个元素上，将集合变换成另外一个集合的过程；filter运算是指用一个函数从输入集合中筛选出符合条件的元素子集的过程。运算得到的集合可以供管道的后续流程使用。我发现一些逻辑如果采用集合管道来编写，代码的可读性会更强——我只消从头到尾阅读一遍代码，就能弄清对象在管道中间的变换过程。
@@ -1212,6 +1259,7 @@ for (const i of input) {
   范例
 
   在这个例子中，我们有一个CSV文件，里面存有各个办公室（office）的一些数据。
+```
   office, country, telephone 
 Chicago, USA, +1 312 373 1000
 Beijing, China, +86 4008 900 505
@@ -1220,8 +1268,9 @@ Porto Alegre, Brazil, +55 51 3079 3550
 Chennai, India, +91 44 660 44766
 
 ... (more data follows)
-
+```
   下面这个acquireData函数的作用是从数据中筛选出印度的所有办公室，并返回办公室所在的城市（city）信息和联系电话（telephone number）。
+```js
   function acquireData(input) { 
  const lines = input.split("\n");
  let firstLine = true;
@@ -1239,10 +1288,11 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   这个循环略显复杂，我希望能用一组管道操作来替换它。
 
   第一步是先创建一个独立的变量，用来存放参与循环过程的集合值。
+```js
   function acquireData(input) { 
  const lines = input.split("\n");
  let firstLine = true;
@@ -1261,8 +1311,9 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   循环第一部分的作用是在忽略CSV文件的第一行数据。这其实是一个切片（slice）操作，因此我先从循环中移除这部分代码，并在集合变量的声明后面新增一个对应的slice运算来替代它。
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  let firstLine = true;
@@ -1282,10 +1333,11 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   从循环中删除代码还有一个好处，那就是firstLine这个控制变量也可以一并移除了——无论何时，删除控制变量总能使我身心愉悦。
 
   该循环的下一个行为是要移除数据中的所有空行。这同样可用一个过滤（filter）运算替代之。
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  const result = [];
@@ -1302,12 +1354,13 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   
     编写管道运算时，我喜欢让结尾的分号单占一行，这样方便调整管道的结构。
   
 
   接下来是将数据的一行转换成数组，这明显可以用一个map运算替代。然后我们还发现，原来的record命名其实有误导性，它没有体现出“转换得到的结果是数组”这个信息，不过既然现在还在做其他重构，先不动它会比较安全，回头再为它改名也不迟。
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  const result = [];
@@ -1324,8 +1377,9 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   然后又是一个过滤（filter）操作，只从结果中筛选出印度办公室的记录。
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  const result = [];
@@ -1343,8 +1397,9 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   最后再把结果映射（map）成需要的记录格式：
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  const result = [];
@@ -1361,8 +1416,9 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   现在，循环剩余的唯一作用就是对累加变量赋值了。我可以将上面管道产出的结果赋值给该累加变量，然后删除整个循环：
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  const result = lines
@@ -1378,8 +1434,9 @@ Chennai, India, +91 44 660 44766
  }
  return result;
 }
-
+```
   以上就是本手法的全部精髓所在了。不过后续还有些清理工作可做：我内联了result变量，为一些函数变量改名，最后还对代码进行布局，让它读起来更像个表格。
+```js
   function acquireData(input) { 
  const lines = input.split("\n"); 
  return lines
@@ -1390,7 +1447,7 @@ Chennai, India, +91 44 660 44766
     .map   (fields =&gt; ({city: fields[0].trim(), phone: fields[2].trim()}))
     ;
 }
-
+```
   我还想过是否要内联lines变量，但我感觉它还算能解释该行代码的意图，因此我还是将它留在了原处。
 
   延伸阅读
@@ -1399,11 +1456,11 @@ Chennai, India, +91 44 660 44766
 
 ##  8.9 移除死代码（Remove Dead Code）
 
-  
+```js
   if(false) { 
   doSomethingThatUsedToMatter();
 }
-
+```
   
 
   动机
