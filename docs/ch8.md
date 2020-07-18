@@ -68,7 +68,7 @@ class AccountType {
 让我用一个函数来举例。这个函数会计算一条 GPS 轨迹记录（track record）的总距离（total distance）。
 
 ```js
-  function trackSummary(points) {
+function trackSummary(points) {
  const totalTime = calculateTime();
  const totalDistance = calculateDistance();
  const pace = totalTime / 60 / totalDistance ;
@@ -147,7 +147,7 @@ class AccountType {
 
 至于 distance，虽然我也可以将它作为参数传进来，但也许将其计算函数 calculate Distance 一并搬移过来会更合适。该函数的代码如下。
 
-function trackSummary...
+#### function trackSummary...
 
 ```js
 function distance(p1, p2) {
@@ -284,7 +284,7 @@ function radians(degrees) { ... }
 
 在类之间搬移函数也是一种常见场景，下面我将用一个表示“账户”的 Account 类来讲解。
 
-class Account...
+#### class Account...
 
 ```js
   get bankCharge() {
@@ -312,7 +312,7 @@ get overdraftCharge() {
 
 然后，我将 overdraftCharge 函数主体复制到 AccountType 类中，并做相应调整。
 
-class AccountType...
+#### class AccountType...
 
 ```js
   overdraftCharge(daysOverdrawn) {
@@ -332,7 +332,7 @@ class AccountType...
 
 完成函数复制后，我会将原来的方法代之以一个委托调用。
 
-class Account...
+#### class Account...
 
 ```js
   get bankCharge() {
@@ -348,7 +348,7 @@ get overdraftCharge() {
 
 然后下一件需要决定的事情是，是保留 overdraftCharge 这个委托函数，还是直接内联它？内联的话，代码会变成下面这样。
 
-class Account...
+#### class Account...
 
 ```js
   get bankCharge() {
@@ -361,7 +361,7 @@ class Account...
 
 在早先的步骤中，我将 daysOverdrawn 作为参数直接传递给 overdraftCharge 函数，但如若账户（account）对象上有很多数据需要传递，那我就比较倾向于直接将整个对象作为参数传递过去：
 
-class Account...
+#### class Account...
 
 ```js
   get bankCharge() {
@@ -446,7 +446,7 @@ class AccountType…
 
 我将用下面这个例子来介绍这项手法，其中 Customer 类代表了一位“顾客”，CustomerContract 代表与顾客关联的一个“合同”。
 
-class Customer...
+#### class Customer...
 
 ```js
   constructor(name, discountRate) {
@@ -464,7 +464,7 @@ applyDiscount(amount) {
 }
 ```
 
-class CustomerContract...
+#### class CustomerContract...
 
 ```js
   constructor(startDate) {
@@ -476,7 +476,7 @@ class CustomerContract...
 
 第一件事情是先用封装变量（132）将对\_discountRate 字段的访问封装起来。
 
-class Customer...
+#### class Customer...
 
 ```js
   constructor(name, discountRate) {
@@ -499,7 +499,7 @@ applyDiscount(amount)  {
 
 接着我在 CustomerContract 中添加一个对应的字段和访问函数。
 
-class CustomerContract...
+#### class CustomerContract...
 
 ```js
   constructor(startDate, discountRate) {
@@ -512,7 +512,7 @@ set discountRate(arg) {this._discountRate = arg;}
 
 接下来，我可以修改 customer 对象的访问函数，让它引用 CustomerContract 这个新添的字段。不过当我这么干时，我收到了一个错误：“Cannot set property 'discountRate' of undefined”。这是因为我们先调用了 `_setDiscountRate` 函数，而此时 CustomerContract 对象尚未创建出来。为了修复这个错误，我得先撤销刚刚的代码，回到上一个可工作的状态，然后再应用移动语句（223）手法，将`_setDiscountRate` 函数调用语句挪动到创建对象的语句之后。
 
-class Customer...
+#### class Customer...
 
 ```js
   constructor(name, discountRate) {
@@ -524,7 +524,7 @@ class Customer...
 
 搬移完语句后运行一下测试。测试通过后，再次修改 Customer 的访问函数，让它使用\_contract 对象上的 discountRate 字段。
 
-class Customer...
+#### class Customer...
 
 ```js
   get discountRate() {return this._contract.discountRate;}
@@ -543,18 +543,21 @@ _setDiscountRate(aNumber) {this._contract.discountRate = aNumber;}
 
 现在，让我们看另外一个场景。还是那个代表“账户”的 Account 类，类上有一个代表“利率”的字段\_interestRate。
 
-class Account...
+#### class Account...
 
 ```js
-  constructor(number, type, interestRate) {
+constructor(number, type, interestRate) {
  this._number = number;
  this._type = type;
  this._interestRate = interestRate;
 }
 get interestRate() {return this._interestRate;}
+```
 
-  class AccountType...
-  constructor(nameString) {
+#### class AccountType...
+
+```js
+constructor(nameString) {
   this._name = nameString;
 }
 ```
@@ -563,10 +566,10 @@ get interestRate() {return this._interestRate;}
 
 利率字段已经通过访问函数得到了良好的封装，因此我只需要在 AccountType 上创建对应的字段及访问函数即可。
 
-class AccountType...
+#### class AccountType...
 
 ```js
-  constructor(nameString, interestRate) {
+constructor(nameString, interestRate) {
   this._name = nameString;
   this._interestRate = interestRate;
 }
@@ -575,10 +578,10 @@ get interestRate() {return this._interestRate;}
 
 接着我应该着手替换 Account 类的访问函数，但我发现直接替换可能有个潜藏的问题。在重构之前，每个账户都自己维护一份利率数据，而现在我要让所有相同类型的账户共享同一个利率值。如果当前类型相同的账户确实拥有相同的利率，那么这次重构就能成立，因为这不会引起可观测的行为变化。但只要存在一个特例，即同一类型的账户可能有不同的利率值，那么这样的修改就不叫重构了，因为它会改变系统的可观测行为。倘若账户的数据保存在数据库中，那我就应该检查一下数据库，确保同一类型的账户都拥有与其账户类型匹配的利率值。同时，我还可以在 Account 类引入断言（302），确保出现异常的利率数据时能够及时发现。
 
-class Account...
+#### class Account...
 
 ```js
-  constructor(number, type, interestRate) {
+constructor(number, type, interestRate) {
   this._number = number;
   this._type = type;
   assert(interestRate === this._type.interestRate);
@@ -589,10 +592,10 @@ get interestRate() {return this._interestRate;}
 
 我会保留这条断言，让系统先运行一段时间，看看是否会在这捕获到错误。或者，除了添加断言，我还可以将错误记录到日志里。一段时间后，一旦我对代码变得更加自信，确定它确实没有引起行为变化后，我就可以让 Account 直接访问 AccountType 上的 interestRate 字段，并将原来的字段完全删除了。
 
-class Account...
+#### class Account...
 
 ```js
-  constructor(number, type) {
+constructor(number, type) {
   this._number = number;
   this._type = type;
 }
@@ -944,7 +947,7 @@ function zztmp(outStream, photo) {
 最后，我将 zztmp 改名为原函数的名字 emitPhotoData，完成本次重构。
 
 ```js
-  function renderPerson(outStream, person) {
+function renderPerson(outStream, person) {
  outStream.write(`&lt;p&gt;${person.name}&lt;/p&gt;\n`);
  renderPhoto(outStream, person.photo);
  emitPhotoData(outStream, person.photo);
@@ -1036,7 +1039,7 @@ let charge;
 请观察以下代码片段：
 
 ```js
-   1 const pricingPlan = retrievePricingPlan();
+ 1 const pricingPlan = retrievePricingPlan();
  2 const order = retreiveOrder();
  3 const baseCharge = pricingPlan.base;
  4 let charge;
@@ -1161,7 +1164,7 @@ averageAge = averageAge / people.length;
 下面我以一段循环代码开始。该循环会计算需要支付给所有员工的总薪水（total salary），并计算出最年轻（youngest）员工的年龄。
 
 ```js
-  let youngest = people[0] ? people[0].age : Infinity;
+let youngest = people[0] ? people[0].age : Infinity;
 let totalSalary = 0;
 for (const p of people) {
  if (p.age &lt; youngest) youngest = p.age;
@@ -1174,7 +1177,7 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
 该循环十分简单，但仍然做了两种不同的计算。要拆分这两种计算，我要先复制一遍循环代码。
 
 ```js
-  let youngest = people[0] ? people[0].age : Infinity;
+let youngest = people[0] ? people[0].age : Infinity;
 let totalSalary = 0;
 for (const p of people) {
  if (p.age &lt; youngest) youngest = p.age;
@@ -1191,7 +1194,7 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
 复制过后，我需要将循环中重复的计算逻辑删除，否则就会累加出错误的结果。如果循环中的代码没有副作用，那便可以先留着它们不删除，可惜上述例子并不符合这种情况。
 
 ```js
-  let youngest = people[0] ? people[0].age : Infinity;
+let youngest = people[0] ? people[0].age : Infinity;
 let totalSalary = 0;
 for (const p of people) {
  if (p.age &lt; youngest) youngest = p.age;
@@ -1209,7 +1212,7 @@ return `youngestAge: ${youngest}, totalSalary: ${totalSalary}`;
 至此，拆分循环这个手法本身的内容就结束了。但本手法的意义不仅在于拆分出循环本身，而且在于它为进一步优化提供了良好的起点——下一步我通常会寻求将每个循环提炼到独立的函数中。在做提炼之前，我得先用移动语句（223）微调一下代码顺序，将与循环相关的变量先搬移到一起：
 
 ```js
-  let totalSalary = 0;
+let totalSalary = 0;
 for (const p of people) {
  totalSalary += p.salary;
 }
@@ -1260,14 +1263,14 @@ function youngestAge() {
 ## 8.8 以管道取代循环（Replace Loop with Pipeline）
 
 ```js
-  const names = [];
+const names = [];
 for (const i of input) {
   if (i.job === "programmer")
     names.push(i.name);
 }
 
 
-  const names = input
+const names = input
   .filter(i =&gt; i.job === "programmer")
   .map(i =&gt; i.name)
 ;
@@ -1294,7 +1297,7 @@ for (const i of input) {
 在这个例子中，我们有一个 CSV 文件，里面存有各个办公室（office）的一些数据。
 
 ```
-  office, country, telephone
+office, country, telephone
 Chicago, USA, +1 312 373 1000
 Beijing, China, +86 4008 900 505
 Bangalore, India, +91 80 4064 9570
@@ -1379,7 +1382,7 @@ function acquireData(input) {
 该循环的下一个行为是要移除数据中的所有空行。这同样可用一个过滤（filter）运算替代之。
 
 ```js
-  function acquireData(input) {
+function acquireData(input) {
  const lines = input.split("\n");
  const result = [];
  const loopItems = lines
@@ -1402,7 +1405,7 @@ function acquireData(input) {
 接下来是将数据的一行转换成数组，这明显可以用一个 map 运算替代。然后我们还发现，原来的 record 命名其实有误导性，它没有体现出“转换得到的结果是数组”这个信息，不过既然现在还在做其他重构，先不动它会比较安全，回头再为它改名也不迟。
 
 ```js
-  function acquireData(input) {
+function acquireData(input) {
  const lines = input.split("\n");
  const result = [];
  const loopItems = lines
@@ -1423,7 +1426,7 @@ function acquireData(input) {
 然后又是一个过滤（filter）操作，只从结果中筛选出印度办公室的记录。
 
 ```js
-  function acquireData(input) {
+function acquireData(input) {
  const lines = input.split("\n");
  const result = [];
  const loopItems = lines
@@ -1466,7 +1469,7 @@ function acquireData(input) {
 现在，循环剩余的唯一作用就是对累加变量赋值了。我可以将上面管道产出的结果赋值给该累加变量，然后删除整个循环：
 
 ```js
-  function acquireData(input) {
+function acquireData(input) {
  const lines = input.split("\n");
  const result = lines
     .slice(1)
@@ -1486,7 +1489,7 @@ function acquireData(input) {
 以上就是本手法的全部精髓所在了。不过后续还有些清理工作可做：我内联了 result 变量，为一些函数变量改名，最后还对代码进行布局，让它读起来更像个表格。
 
 ```js
-  function acquireData(input) {
+function acquireData(input) {
  const lines = input.split("\n");
  return lines
     .slice (1)

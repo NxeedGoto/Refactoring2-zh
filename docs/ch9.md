@@ -222,7 +222,7 @@ const organization = new Organization({
 
 由于已经把输入数据复制到内部数据结构中，现在我需要将这两个数据结构区分开，以便各自单独处理。我可以另外定义一个字段，修改构造函数和访问函数，令其使用新字段。
 
-class Organization...
+#### class Organization...
 
 ```js
 class Organization {
@@ -247,7 +247,7 @@ class Organization {
 
 接下来我就可以在构造函数中使用 title 字段。
 
-class Organization...
+#### class Organization...
 
 ```js
 class Organization {
@@ -281,7 +281,7 @@ const organization = new Organization({
 
 全部修改完成后，就可以在构造函数中去掉对 name 的支持，只使用 title。
 
-class Organization...
+#### class Organization...
 
 ```js
 class Organization {
@@ -306,7 +306,7 @@ class Organization {
 
 现在构造函数和内部数据结构都已经在使用新名字了，接下来我就可以给访问函数改名。这一步很简单，只要对每个访问函数运用函数改名（124）就行了。
 
-class Organization...
+#### class Organization...
 
 ```js
 class Organization {
@@ -378,7 +378,7 @@ set discount(aNumber) {this._discount = aNumber;}
 
 下面这个例子虽小，却完美展示了代码的丑陋。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
 get production() {return this._production;}
@@ -392,7 +392,7 @@ applyAdjustment(anAdjustment) {
 
 但我是个谨慎的人。“可以即时计算”只是我的猜想——我可以用引入断言（302）来验证这个猜想。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
 get production() {
@@ -408,7 +408,7 @@ get calculatedProduction() {
 
 放上这个断言之后，我会运行测试。如果断言没有失败，我就可以不再返回该字段，改为返回即时计算的结果。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
 get production() {
@@ -419,7 +419,7 @@ get production() {
 
 然后用内联函数（115）把计算逻辑内联到 production 函数内。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
 get production() {
@@ -430,7 +430,7 @@ get production() {
 
 再用移除死代码（237）扫清使用旧变量的地方。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
   applyAdjustment(anAdjustment) {
@@ -443,7 +443,7 @@ class ProductionPlan...
 
 上面的例子处理得轻松愉快，因为 production 的值很明显只有一个来源。但有时候，累计值会受到多个数据来源的影响。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
   constructor (production) {
@@ -474,7 +474,7 @@ get production() {
 
 现在我就可以使用引入断言（302）。
 
-class ProductionPlan...
+#### class ProductionPlan...
 
 ```js
 get production() {
@@ -527,7 +527,7 @@ applyDiscount(arg) {
 
 设想一个代表“人”的 Person 类，其中包含一个代表“电话号码”的 Telephone Number 对象。
 
-class Person...
+#### class Person...
 
 ```js
   constructor() {
@@ -541,7 +541,7 @@ get officeNumber()  {return this._telephoneNumber.number;}
 set officeNumber(arg) {this._telephoneNumber.number = arg;}
 ```
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
   get areaCode()    {return this._areaCode;}
@@ -555,7 +555,7 @@ set number(arg) {this._number = arg;}
 
 我需要做的第一件事是把 TelephoneNumber 类变成不可变的。对它的字段运用移除设值函数（331）。移除设值函数（331）的第一步是，用改变函数声明（124）把这两个字段的初始值加到构造函数中，并迫使构造函数调用设值函数。
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
   constructor(areaCode, number) {
@@ -566,7 +566,7 @@ class TelephoneNumber...
 
 然后我会逐一查看设值函数的调用者，并将其改为重新赋值整个对象。先从“地区代码”（area code）开始。
 
-class Person...
+#### class Person...
 
 ```js
   get officeAreaCode()    {return this._telephoneNumber.areaCode;}
@@ -579,7 +579,7 @@ set officeNumber(arg) {this._telephoneNumber.number = arg;}
 
 对于其他字段，重复上述步骤。
 
-class Person...
+#### class Person...
 
 ```js
   get officeAreaCode()    {return this._telephoneNumber.areaCode;}
@@ -594,7 +594,7 @@ set officeNumber(arg) {
 
 现在，TelephoneNumber 已经是不可变的类，可以将其变成真正的值对象了。是不是真正的值对象，要看是否基于值判断相等性。在这个领域中，JavaScript 做得不好：语言和核心库都不支持将“基于引用的相等性判断”换成“基于值的相等性判断”。我唯一能做的就是创建自己的 equals 函数。
 
-class TelephoneNumber...
+#### class TelephoneNumber...
 
 ```js
   equals(other) {
@@ -656,7 +656,7 @@ let customer = customerRepository.get(customerData.id);
 
 我将从一个代表“订单”的 Order 类开始，其实例对象可从一个 JSON 文件创建。用来创建订单的数据中有一个顾客（customer）ID，我们用它来进一步创建 Customer 对象。
 
-class Order...
+#### class Order...
 
 ```js
   constructor(data) {
@@ -667,7 +667,7 @@ class Order...
 get customer() {return this._customer;}
 ```
 
-class Customer...
+#### class Customer...
 
 ```js
   constructor(id) {
@@ -705,7 +705,7 @@ export function findCustomer(id) {
 
 下一步是要弄清楚，Order 的构造函数如何获得正确的 Customer 对象。在这个例子里，这一步很简单，因为输入数据流中已经包含了顾客的 ID。
 
-class Order...
+#### class Order...
 
 ```js
   constructor(data) {
