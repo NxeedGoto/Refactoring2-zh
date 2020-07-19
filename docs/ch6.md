@@ -14,6 +14,8 @@
 
 反向重构：内联函数（115）
 
+![](./figures/image00284.jpeg)
+
 ```js
 function printOwing(invoice) {
   printBanner();
@@ -386,6 +388,8 @@ function calculateOutstanding(invoice) {
 
 反向重构：提炼函数（106）
 
+![](./figures/image00286.jpeg)
+
 ```js
 function getRating(driver) {
  return moreThanFiveLateDeliveries(driver) ? 2 : 1;
@@ -522,6 +526,8 @@ function reportLines(aCustomer) {
 曾用名：引入解释性变量（Introduce Explaining Variable）
 
 反向重构：内联变量（123）
+
+![](./figures/image00288.jpeg)
 
 ```js
 return (
@@ -714,12 +720,16 @@ class Order {
 
 反向重构：提炼变量（119）
 
+![](./figures/image00290.jpeg)
+
 ```js
-  let basePrice = anOrder.basePrice;
+let basePrice = anOrder.basePrice;
 return (basePrice &gt; 1000);
+```
 
-
-  return anOrder.basePrice &gt; 1000;
+```js
+return anOrder.basePrice & gt;
+1000;
 ```
 
 ### 动机
@@ -753,10 +763,13 @@ return (basePrice &gt; 1000);
 
 别名：修改签名（Change Signature）
 
+![](./figures/image00292.jpeg)
+
 ```js
 function circum(radius) {...}
+```
 
-
+```js
 function circumference(radius) {...}
 ```
 
@@ -1006,9 +1019,13 @@ function inNewEngland(stateCode) {
 
 曾用名：封装字段（Encapsulate Field）
 
+![](./figures/image00293.jpeg)
+
 ```js
 let defaultOwner = { firstName: "Martin", lastName: "Fowler" };
+```
 
+```js
 let defaultOwnerData = { firstName: "Martin", lastName: "Fowler" };
 export function defaultOwner() {
   return defaultOwnerData;
@@ -1180,9 +1197,13 @@ class Person {
 
 ## 6.7 变量改名（Rename Variable）
 
+![](./figures/image00294.jpeg)
+
 ```js
 let a = height * width;
+```
 
+```js
 let area = height * width;
 ```
 
@@ -1284,12 +1305,15 @@ const cpyNm = companyName;
 
 ## 6.8 引入参数对象（Introduce Parameter Object）
 
+![](./figures/image00296.jpeg)
+
 ```js
 function amountInvoiced(startDate, endDate) {...}
 function amountReceived(startDate, endDate) {...}
 function amountOverdue(startDate, endDate) {...}
+```
 
-
+```js
 function amountInvoiced(aDateRange) {...}
 function amountReceived(aDateRange) {...}
 function amountOverdue(aDateRange) {...}
@@ -1476,13 +1500,16 @@ function readingsOutsideRange(station, range) {
 
 ## 6.9 函数组合成类（Combine Functions into Class）
 
+![](./figures/image00298.jpeg)
+
 ```js
 function base(aReading) {...}
 function taxableCharge(aReading) {...}
 function calculateBaseCharge(aReading) {...}
+```
 
-
-  class Reading {
+```js
+class Reading {
   base() {...}
   taxableCharge() {...}
   calculateBaseCharge() {...}
@@ -1676,7 +1703,7 @@ const taxableCharge = taxableChargeFn(aReading);
 #### class Reading...
 
 ```js
-  get taxableCharge() {
+get taxableCharge() {
   return Math.max(0, this.baseCharge - taxThreshold(this.year));
 }
 ```
@@ -1693,11 +1720,14 @@ const taxableCharge = aReading.taxableCharge;
 
 ## 6.10 函数组合成变换（Combine Functions into Transform）
 
+![](./figures/image00300.jpeg)
+
 ```js
 function base(aReading) {...}
 function taxableCharge(aReading) {...}
+```
 
-
+```js
 function enrichReading(argReading) {
   const aReading = _.cloneDeep(argReading);
   aReading.baseCharge = base(aReading);
@@ -1902,11 +1932,15 @@ const taxableCharge = aReading.taxableCharge;
 
 ## 6.11 拆分阶段（Split Phase）
 
+![](./figures/image00302.jpeg)
+
 ```js
 const orderData = orderString.split(/\s+/);
 const productPrice = priceList[orderData[0].split("-")[1]];
 const orderPrice = parseInt(orderData[1]) * productPrice;
+```
 
+```js
 const orderRecord = parseOrder(order);
 const orderPrice = price(orderRecord, priceList);
 
